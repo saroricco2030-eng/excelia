@@ -1052,7 +1052,7 @@ class GridPainter extends CustomPainter {
 
   // ── TextPainter cache — avoids layout() on every frame ──
   static final Map<int, TextPainter> _tpCache = {};
-  static const int _maxCacheSize = 500;
+  static const int _maxCacheSize = 2000;
 
   static TextPainter _getCachedPainter(String text, TextStyle style, double maxWidth, {int? maxLines, String? ellipsis}) {
     final key = Object.hash(text, style, maxWidth, maxLines);

@@ -331,6 +331,22 @@ class SpreadsheetProvider extends ChangeNotifier {
   // 병합 셀: 시트별 병합 범위 리스트 [(startRow, startCol, endRow, endCol)]
   final Map<String, List<(int, int, int, int)>> _allMergedCells = {};
 
+  // O(1) merge lookup cache — invalidated on merge/unmerge/sheet-switch/load
+  Map<String, (int, int, int, int)>? _mergeIndex;
+
+  Map<String, (int, int, int, int)> get _mergeMap {
+    if (_mergeIndex != null) return _mergeIndex!;
+    _mergeIndex = {};
+    for (final m in mergedCells) {
+      for (int r = m.$1; r <= m.$3; r++) {
+        for (int c = m.$2; c <= m.$4; c++) {
+          _mergeIndex!['$r,$c'] = m;
+        }
+      }
+    }
+    return _mergeIndex!;
+  }
+
   // 숨김 행/열
   final Map<String, Set<int>> _allHiddenRows = {};
   final Map<String, Set<int>> _allHiddenCols = {};
@@ -504,22 +520,16 @@ class SpreadsheetProvider extends ChangeNotifier {
   List<(int, int, int, int)> get mergedCells =>
       _allMergedCells[_currentSheetName] ?? [];
 
-  /// 특정 셀이 병합의 일부인지 확인 (시작 셀은 false)
+  /// 특정 셀이 병합의 일부인지 확인 — O(1) via _mergeMap
   (int, int, int, int)? getMergeForCell(int row, int col) {
-    for (final m in mergedCells) {
-      if (row >= m.$1 && row <= m.$3 && col >= m.$2 && col <= m.$4) {
-        return m;
-      }
-    }
-    return null;
+    return _mergeMap['$row,$col'];
   }
 
-  /// 병합 영역의 시작 셀인지
+  /// 병합 영역의 시작 셀인지 — O(1) via _mergeMap
   bool isMergeStart(int row, int col) {
-    for (final m in mergedCells) {
-      if (m.$1 == row && m.$2 == col) return true;
-    }
-    return false;
+    final m = _mergeMap['$row,$col'];
+    if (m == null) return false;
+    return m.$1 == row && m.$2 == col;
   }
 
   /// 병합의 시작 셀이 아닌 나머지 셀인지 (숨겨야 하는 셀)
@@ -546,6 +556,7 @@ class SpreadsheetProvider extends ChangeNotifier {
     _allColWidths.clear();
     _allRowHeights.clear();
     _allMergedCells.clear();
+    _mergeIndex = null;
     for (final n in _sheetNames) {
       _allCellData[n] = {};
       _allCellFormats[n] = {};
@@ -627,6 +638,7 @@ class SpreadsheetProvider extends ChangeNotifier {
     _allColWidths.clear();
     _allRowHeights.clear();
     _allMergedCells.clear();
+    _mergeIndex = null;
     _undoStack.clear();
     _redoStack.clear();
     _clipboard = null;
@@ -1215,6 +1227,7 @@ class SpreadsheetProvider extends ChangeNotifier {
     _selectedRow = 0;
     _selectedCol = 0;
     _hasRange = false;
+    _mergeIndex = null;
     _invalidateDimensionCache();
     _isModified = true;
     notifyListeners();
@@ -1233,6 +1246,7 @@ class SpreadsheetProvider extends ChangeNotifier {
       _selectedCol = 0;
       _hasRange = false;
     }
+    _mergeIndex = null;
     _invalidateDimensionCache();
     _isModified = true;
     notifyListeners();
@@ -1246,7 +1260,9 @@ class SpreadsheetProvider extends ChangeNotifier {
     _allCellFormats[newName] = _allCellFormats.remove(oldName) ?? {};
     _allColWidths[newName] = _allColWidths.remove(oldName) ?? {};
     _allRowHeights[newName] = _allRowHeights.remove(oldName) ?? {};
+    _allMergedCells[newName] = _allMergedCells.remove(oldName) ?? [];
     if (_currentSheetName == oldName) _currentSheetName = newName;
+    _mergeIndex = null;
     _isModified = true;
     notifyListeners();
   }
@@ -1258,6 +1274,7 @@ class SpreadsheetProvider extends ChangeNotifier {
     _selectedCol = 0;
     _hasRange = false;
     _isEditing = false;
+    _mergeIndex = null;
     _invalidateDimensionCache();
     notifyListeners();
   }
@@ -1274,7 +1291,9 @@ class SpreadsheetProvider extends ChangeNotifier {
     _allCellFormats[newName] = Map.from(_allCellFormats[name] ?? {});
     _allColWidths[newName] = Map.from(_allColWidths[name] ?? {});
     _allRowHeights[newName] = Map.from(_allRowHeights[name] ?? {});
+    _allMergedCells[newName] = List.from(_allMergedCells[name] ?? []);
     _currentSheetName = newName;
+    _mergeIndex = null;
     _isModified = true;
     notifyListeners();
   }
@@ -1388,7 +1407,10 @@ class SpreadsheetProvider extends ChangeNotifier {
     final snap = _undoStack.removeLast();
     _allCellData[snap.sheetName] = snap.cellData;
     _allCellFormats[snap.sheetName] = snap.cellFormats;
-    if (_currentSheetName != snap.sheetName) _currentSheetName = snap.sheetName;
+    if (_currentSheetName != snap.sheetName) {
+      _currentSheetName = snap.sheetName;
+      _mergeIndex = null;
+    }
     _isModified = true;
     notifyListeners();
   }
@@ -1403,7 +1425,10 @@ class SpreadsheetProvider extends ChangeNotifier {
     final snap = _redoStack.removeLast();
     _allCellData[snap.sheetName] = snap.cellData;
     _allCellFormats[snap.sheetName] = snap.cellFormats;
-    if (_currentSheetName != snap.sheetName) _currentSheetName = snap.sheetName;
+    if (_currentSheetName != snap.sheetName) {
+      _currentSheetName = snap.sheetName;
+      _mergeIndex = null;
+    }
     _isModified = true;
     notifyListeners();
   }
@@ -1732,6 +1757,7 @@ class SpreadsheetProvider extends ChangeNotifier {
 
     _allMergedCells[_currentSheetName] ??= [];
     _allMergedCells[_currentSheetName]!.add((r0, c0, r1, c1));
+    _mergeIndex = null;
     _isModified = true;
     notifyListeners();
   }
@@ -1746,6 +1772,7 @@ class SpreadsheetProvider extends ChangeNotifier {
 
     _allMergedCells[_currentSheetName]?.removeWhere((m) =>
         !(m.$3 < r0 || m.$1 > r1 || m.$4 < c0 || m.$2 > c1));
+    _mergeIndex = null;
     _isModified = true;
     notifyListeners();
   }

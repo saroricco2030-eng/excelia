@@ -53,24 +53,17 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
   // ---------------------------------------------------------------------------
 
   List<RecentFile> _filteredFiles(List<RecentFile> allFiles) {
-    var files = allFiles;
+    if (_activeChipIndex == 0 && _searchQuery.isEmpty) return allFiles;
 
-    // Type filter based on chip index
-    if (_activeChipIndex > 0 && _activeChipIndex < _chipTypeMap.length) {
-      final filterType = _chipTypeMap[_activeChipIndex];
-      if (filterType != null) {
-        files = files.where((f) => f.type == filterType).toList();
-      }
-    }
+    final filterType = (_activeChipIndex > 0 && _activeChipIndex < _chipTypeMap.length)
+        ? _chipTypeMap[_activeChipIndex]
+        : null;
 
-    // Search filter
-    if (_searchQuery.isNotEmpty) {
-      files = files
-          .where((f) => f.name.toLowerCase().contains(_lowercaseQuery))
-          .toList();
-    }
-
-    return files;
+    return allFiles.where((f) {
+      if (filterType != null && f.type != filterType) return false;
+      if (_lowercaseQuery.isNotEmpty && !f.name.toLowerCase().contains(_lowercaseQuery)) return false;
+      return true;
+    }).toList();
   }
 
   void _clearSearch() {

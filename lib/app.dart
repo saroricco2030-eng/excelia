@@ -22,9 +22,9 @@ class ExceliaApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppProvider()..loadRecentFiles()),
-        ChangeNotifierProvider(create: (_) => SpreadsheetProvider()),
-        ChangeNotifierProvider(create: (_) => DocumentProvider()),
-        ChangeNotifierProvider(create: (_) => PresentationProvider()),
+        ChangeNotifierProvider(create: (_) => SpreadsheetProvider(), lazy: true),
+        ChangeNotifierProvider(create: (_) => DocumentProvider(), lazy: true),
+        ChangeNotifierProvider(create: (_) => PresentationProvider(), lazy: true),
       ],
       child: Consumer<AppProvider>(
         builder: (context, appProvider, _) {
