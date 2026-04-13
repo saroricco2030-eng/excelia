@@ -37,9 +37,9 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
   static const List<DocumentType?> _chipTypeMap = [
     null, // All
     DocumentType.spreadsheet,
+    DocumentType.pdf,
     DocumentType.document,
     DocumentType.presentation,
-    DocumentType.pdf,
   ];
 
   @override
@@ -132,7 +132,7 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Spreadsheet
+              // Spreadsheet (primary)
               _CreateNewItem(
                 icon: LucideIcons.table,
                 color: AppColors.spreadsheetGreen,
@@ -140,6 +140,17 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                 onTap: () {
                   Navigator.pop(ctx);
                   Navigator.pushNamed(context, '/spreadsheet');
+                },
+              ),
+              const SizedBox(height: 8),
+              // PDF open (secondary)
+              _CreateNewItem(
+                icon: LucideIcons.fileSearch,
+                color: AppColors.pdfRed,
+                label: l.pdfOpen,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  widget.onPickFile();
                 },
               ),
               const SizedBox(height: 8),
@@ -162,17 +173,6 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                 onTap: () {
                   Navigator.pop(ctx);
                   Navigator.pushNamed(context, '/presentation');
-                },
-              ),
-              const SizedBox(height: 8),
-              // Open file
-              _CreateNewItem(
-                icon: LucideIcons.folderOpen,
-                color: AppColors.primary,
-                label: l.pdfOpen,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  widget.onPickFile();
                 },
               ),
               const SizedBox(height: 16),
@@ -208,9 +208,9 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
     final labels = [
       l.homeAll,
       l.typeSpreadsheet,
+      l.typePdf,
       l.typeDocument,
       l.typePresentation,
-      l.typePdf,
     ];
 
     return SizedBox(
@@ -405,6 +405,15 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                                 ),
                                 const SizedBox(width: AppSizes.gap12),
                                 QuickActionCard(
+                                  icon: LucideIcons.fileSearch,
+                                  label: l.pdfOpen,
+                                  color: AppColors.pdfRed,
+                                  lightTint: AppColors.pdfTintLight,
+                                  darkTint: AppColors.pdfTintDark,
+                                  onTap: widget.onPickFile,
+                                ),
+                                const SizedBox(width: AppSizes.gap12),
+                                QuickActionCard(
                                   icon: LucideIcons.fileText,
                                   label: l.newDocument,
                                   color: AppColors.documentBlue,
@@ -425,15 +434,6 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                                     Navigator.pushNamed(
                                         ctx, '/presentation');
                                   },
-                                ),
-                                const SizedBox(width: AppSizes.gap12),
-                                QuickActionCard(
-                                  icon: LucideIcons.fileText,
-                                  label: l.pdfOpen,
-                                  color: AppColors.pdfRed,
-                                  lightTint: AppColors.pdfTintLight,
-                                  darkTint: AppColors.pdfTintDark,
-                                  onTap: widget.onPickFile,
                                 ),
                               ],
                             ),
@@ -501,7 +501,7 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
             ),
           ),
         ),
-        // -- FAB: Create New --
+        // -- FAB: New file --
         Positioned(
           right: 20,
           bottom: MediaQuery.of(context).viewPadding.bottom + 16,
