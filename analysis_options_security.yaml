@@ -1,0 +1,78 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# analysis_options.yaml — SECURITY_MASTER v1.0 보안 규칙
+# 기존 파일에 이 내용을 병합하거나 이 파일을 그대로 사용하세요
+# ══════════════════════════════════════════════════════════════════════════════
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "build/**"
+
+  errors:
+    # 보안 관련 — ERROR로 강제 (빌드 차단)
+    avoid_print: error                     # PART 3: 프로덕션 로그 민감정보 방지
+    use_build_context_synchronously: error
+    avoid_web_libraries_in_flutter: error
+
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    # ── 보안 직결 (SECURITY_MASTER v1.0) ─────────────────────────────────
+
+    # PART 3 — 데이터 보안
+    avoid_print: true                      # print()로 토큰/PII 출력 방지
+    avoid_dynamic_calls: true             # 타입 안전성 → 민감 데이터 오처리 방지
+    use_string_buffers: false
+
+    # PART 4 — 인증 & 인가
+    always_declare_return_types: true     # 인증 함수 반환값 명시적 처리 강제
+    avoid_returning_null_for_future: true  # 인증 Future null 반환 방지
+
+    # PART 6 — 네트워크 보안
+    avoid_catches_without_on_clauses: true # 네트워크 예외 명시적 처리 강제
+    use_rethrow_when_possible: true
+
+    # PART 9 — 앱 무결성
+    avoid_relative_lib_imports: true      # 코드 구조 명확화
+    always_use_package_imports: true
+
+    # PART 13 — 공급망 보안
+    depend_on_referenced_packages: true   # 미선언 패키지 의존 차단
+
+    # ── 코드 품질 (간접 보안 영향) ───────────────────────────────────────
+    prefer_const_constructors: true
+    prefer_final_fields: true
+    prefer_final_locals: true             # 불변 변수 → 토큰 재할당 방지
+    avoid_shadowing_type_parameters: true
+    no_duplicate_case_values: true
+    unrelated_type_equality_checks: true
+    valid_regexps: true
+    cancel_subscriptions: true            # 메모리 리크 방지
+    close_sinks: true
+    literal_only_boolean_expressions: false
+    prefer_void_to_null: true
+    unnecessary_null_checks: true
+    cast_nullable_to_non_nullable: true
+
+# ── 커스텀 금지 패턴 (주석으로 팀에 공유) ─────────────────────────────────
+#
+# 아래 패턴은 analysis_options에서 직접 감지 불가.
+# pre-commit hook이 자동 차단합니다:
+#
+# [PART 3]  SharedPreferences에 token/secret 저장
+# [PART 3]  Color(0xFF...) 직접 사용 → AppColors 토큰만 허용
+# [PART 3]  Text('하드코딩') → context.l10n.키명만 허용
+# [PART 4]  WebView 안 OAuth 처리
+# [PART 6]  badCertificateCallback: (_,_,_) => true
+# [PART 6]  http:// 사용 (localhost 제외)
+# [PART 10] Firebase Rules: allow read, write: if true
+# [PART 10] console.log에 uid/email/token 출력
+# [PART 12] .env 파일 커밋
+# [PART 13] pubspec.yaml 'any' 버전
+# [PART 16] 결제 Secret Key 클라이언트 포함
+# [PART 17] eval()/exec()에 AI 출력 전달
