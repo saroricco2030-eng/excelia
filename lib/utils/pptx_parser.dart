@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show Colors;
 import 'package:xml/xml.dart';
 import 'package:excelia/utils/constants.dart';
 
@@ -194,16 +193,16 @@ class PptxParser {
   Color _parseSlideBackground(XmlElement root) {
     try {
       final cSld = _findElement(root, 'cSld', _nsP);
-      if (cSld == null) return Colors.white;
+      if (cSld == null) return AppColors.white;
 
       final bg = _findElement(cSld, 'bg', _nsP);
-      if (bg == null) return Colors.white;
+      if (bg == null) return AppColors.white;
 
       final bgPr = _findElement(bg, 'bgPr', _nsP);
       if (bgPr != null) {
         final solidFill = _findElement(bgPr, 'solidFill', _nsA);
         if (solidFill != null) {
-          return _parseFillColor(solidFill) ?? Colors.white;
+          return _parseFillColor(solidFill) ?? AppColors.white;
         }
       }
 
@@ -212,13 +211,13 @@ class PptxParser {
       if (bgRef != null) {
         final srgbClr = _findElement(bgRef, 'srgbClr', _nsA);
         if (srgbClr != null) {
-          return _parseHexColor(srgbClr.getAttribute('val')) ?? Colors.white;
+          return _parseHexColor(srgbClr.getAttribute('val')) ?? AppColors.white;
         }
       }
     } catch (e) {
       debugPrint('PPTX slide background parse failed: $e');
     }
-    return Colors.white;
+    return AppColors.white;
   }
 
   // ===========================================================================

@@ -22,9 +22,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   String? _filePath;
   String? _fileName;
   bool _nightMode = false;
+  bool _singlePageMode = false;
   String? _errorMessage;
 
-  PdfControllerPinch? _pdfController;
+  PdfControllerPinch? _pinchController;
+  PdfController? _pageController;
   int _currentPage = 1;
   int _totalPages = 0;
 
@@ -39,7 +41,8 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
   @override
   void dispose() {
-    _pdfController?.dispose();
+    _pinchController?.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
@@ -54,15 +57,16 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         throw Exception(l.pdfFileNotFound);
       }
 
-      _pdfController?.dispose();
-
-      final doc = PdfDocument.openFile(path);
-      final controller = PdfControllerPinch(document: doc);
+      _pinchController?.dispose();
+      _pageController?.dispose();
 
       setState(() {
         _filePath = path;
         _fileName = path.split(RegExp(r'[/\\]')).last;
-        _pdfController = controller;
+        _pinchController = PdfControllerPinch(
+            document: PdfDocument.openFile(path));
+        _pageController = PdfController(
+            document: PdfDocument.openFile(path));
         _errorMessage = null;
         _currentPage = 1;
       });
@@ -101,7 +105,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       backgroundColor:
           _nightMode ? AppColors.darkBackground : (isDark ? AppColors.darkBackground : AppColors.lightBackground),
       appBar: _buildAppBar(),
-      body: _pdfController == null
+      body: _pinchController == null
           ? _errorMessage != null
               ? _buildErrorState()
               : _buildEmptyState()
@@ -290,18 +294,32 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildViewer() {
-    if (_pdfController == null) return const SizedBox.shrink();
+    if (_pinchController == null) return const SizedBox.shrink();
 
-    final viewer = PdfViewPinch(
-      controller: _pdfController!,
-      padding: 8,
-      onDocumentLoaded: (doc) {
-        setState(() => _totalPages = doc.pagesCount);
-      },
-      onPageChanged: (page) {
-        setState(() => _currentPage = page);
-      },
-    );
+    final Widget viewer;
+
+    if (_singlePageMode) {
+      viewer = PdfView(
+        controller: _pageController!,
+        onDocumentLoaded: (doc) {
+          setState(() => _totalPages = doc.pagesCount);
+        },
+        onPageChanged: (page) {
+          setState(() => _currentPage = page);
+        },
+      );
+    } else {
+      viewer = PdfViewPinch(
+        controller: _pinchController!,
+        padding: 2,
+        onDocumentLoaded: (doc) {
+          setState(() => _totalPages = doc.pagesCount);
+        },
+        onPageChanged: (page) {
+          setState(() => _currentPage = page);
+        },
+      );
+    }
 
     if (!_nightMode) return viewer;
 
@@ -344,14 +362,19 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       ),
       child: Row(
         children: [
+          // Mode toggle
+          IconButton(
+            icon: Icon(
+              _singlePageMode ? LucideIcons.layers : LucideIcons.square,
+              color: textColor, size: 20,
+            ),
+            onPressed: () => setState(() => _singlePageMode = !_singlePageMode),
+            tooltip: _singlePageMode ? 'Continuous' : 'Single Page',
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          ),
           IconButton(
             icon: Icon(LucideIcons.chevronLeft, color: textColor, size: 22),
-            onPressed: _currentPage > 1
-                ? () => _pdfController?.previousPage(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                    )
-                : null,
+            onPressed: _currentPage > 1 ? _prevPage : null,
             tooltip: l.pdfPrevPage,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           ),
@@ -377,32 +400,59 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           ),
           IconButton(
             icon: Icon(LucideIcons.chevronRight, color: textColor, size: 22),
-            onPressed: _currentPage < _totalPages
-                ? () => _pdfController?.nextPage(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                    )
-                : null,
+            onPressed: _currentPage < _totalPages ? _nextPage : null,
             tooltip: l.pdfNextPage,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           ),
           const Spacer(),
           IconButton(
             icon: Icon(LucideIcons.chevronsLeft, color: textColor, size: 20),
-            onPressed: () => _pdfController?.jumpToPage(1),
+            onPressed: () => _goToPage(1),
             tooltip: l.pdfFirstPage,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           ),
           IconButton(
             icon:
                 Icon(LucideIcons.chevronsRight, color: textColor, size: 20),
-            onPressed: () => _pdfController?.jumpToPage(_totalPages),
+            onPressed: () => _goToPage(_totalPages),
             tooltip: l.pdfLastPage,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           ),
         ],
       ),
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Page navigation helpers
+  // ---------------------------------------------------------------------------
+
+  void _prevPage() {
+    const dur = Duration(milliseconds: 200);
+    const curve = Curves.easeOut;
+    if (_singlePageMode) {
+      _pageController?.previousPage(duration: dur, curve: curve);
+    } else {
+      _pinchController?.previousPage(duration: dur, curve: curve);
+    }
+  }
+
+  void _nextPage() {
+    const dur = Duration(milliseconds: 200);
+    const curve = Curves.easeOut;
+    if (_singlePageMode) {
+      _pageController?.nextPage(duration: dur, curve: curve);
+    } else {
+      _pinchController?.nextPage(duration: dur, curve: curve);
+    }
+  }
+
+  void _goToPage(int page) {
+    if (_singlePageMode) {
+      _pageController?.jumpToPage(page);
+    } else {
+      _pinchController?.jumpToPage(page);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -451,7 +501,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   void _jumpToPage(String value) {
     final page = int.tryParse(value);
     if (page != null && page >= 1 && page <= _totalPages) {
-      _pdfController?.jumpToPage(page);
+      _goToPage(page);
     }
   }
 
