@@ -505,6 +505,7 @@
   "presentationUnderline": "Underline",
   "presentationStrikethrough": "Strikethrough",
   "presentationFontFamily": "Font",
+  "presentationFontSystem": "System",
 
   "documentPageSetup": "Page Setup",
   "documentHeader": "Header",

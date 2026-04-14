@@ -2594,6 +2594,12 @@ abstract class AppLocalizations {
   /// **'글꼴'**
   String get presentationFontFamily;
 
+  /// No description provided for @presentationFontSystem.
+  ///
+  /// In ko, this message translates to:
+  /// **'시스템'**
+  String get presentationFontSystem;
+
   /// No description provided for @documentPageSetup.
   ///
   /// In ko, this message translates to:

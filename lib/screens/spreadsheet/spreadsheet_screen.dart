@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:excelia/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,7 @@ import 'package:excelia/screens/common/keyboard_shortcuts_dialog.dart';
 import 'package:excelia/utils/constants.dart';
 import 'package:excelia/utils/snackbar_utils.dart';
 import 'package:excelia/utils/file_utils.dart';
+import 'package:excelia/widgets/aurora_accent_bar.dart';
 import 'widgets/spreadsheet_grid.dart';
 import 'widgets/formula_bar.dart';
 import 'widgets/toolbar.dart';
@@ -58,18 +60,21 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
         final ok = await prov.loadFile(File(arg));
         if (!ok && mounted) {
           final l = AppLocalizations.of(context)!;
-          showExceliaSnackBar(context,
+          showExceliaSnackBar(
+            context,
             message: l.spreadsheetOpenError,
             isError: true,
             actionLabel: l.openInExternalApp,
             onAction: () async {
               final err = await FileUtils.openWithExternalApp(arg);
               if (err != null && mounted) {
-                showExceliaSnackBar(context,
+                showExceliaSnackBar(
+                  context,
                   message: err.toLowerCase().contains('no app')
                       ? l.externalAppError
                       : l.externalAppOpenFailed(err),
-                  isError: true);
+                  isError: true,
+                );
               }
             },
           );
@@ -87,7 +92,9 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
     final provider = _spreadsheetProvider;
-    if (provider == null || !provider.isModified || provider.filePath == null) return;
+    if (provider == null || !provider.isModified || provider.filePath == null) {
+      return;
+    }
     final appProv = context.read<AppProvider>();
     if (!appProv.autoSaveEnabled) return;
     _autoSaveTimer = Timer(const Duration(seconds: 30), () async {
@@ -112,29 +119,31 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
   }
 
   Future<bool> _onWillPop() async {
-    final l = AppLocalizations.of(context)!;
     final prov = context.read<SpreadsheetProvider>();
     if (!prov.isModified) return true;
     final result = await showDialog<int>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.commonUnsavedChanges),
-        content: Text(l.spreadsheetSaveChanges),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, 0), // 취소
-            child: Text(l.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, 1), // 저장 안 함
-            child: Text(l.commonDoNotSave),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, 2), // 저장
-            child: Text(l.commonSave),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l.commonUnsavedChanges),
+          content: Text(l.spreadsheetSaveChanges),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 0), // 취소
+              child: Text(l.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 1), // 저장 안 함
+              child: Text(l.commonDoNotSave),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, 2), // 저장
+              child: Text(l.commonSave),
+            ),
+          ],
+        );
+      },
     );
     if (result == null || result == 0) return false;
     if (result == 2) await prov.saveFile();
@@ -156,16 +165,23 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
         builder: (context, prov, _) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           return Scaffold(
-            backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+            backgroundColor: isDark
+                ? AppColors.darkBackground
+                : AppColors.lightBackground,
             appBar: _buildAppBar(prov),
             body: prov.isLoading
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(color: AppColors.spreadsheetGreen),
+                        const CircularProgressIndicator(
+                          color: AppColors.spreadsheetGreen,
+                        ),
                         const SizedBox(height: 16),
-                        Text(l.fileLoading, style: const TextStyle(color: AppColors.grey500)),
+                        Text(
+                          l.fileLoading,
+                          style: const TextStyle(color: AppColors.grey500),
+                        ),
                       ],
                     ),
                   )
@@ -177,7 +193,12 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
                       const FormulaBar(),
                       // 서식 도구 모음
                       if (_toolbarVisible) const SpreadsheetToolbar(),
-                      Divider(height: 1, color: isDark ? AppColors.darkOutline : AppColors.lightOutline),
+                      Divider(
+                        height: 1,
+                        color: isDark
+                            ? AppColors.darkOutline
+                            : AppColors.lightOutline,
+                      ),
                       // 스프레드시트 그리드
                       const Expanded(child: SpreadsheetGrid()),
                       // 하단 액션 바 (undo/redo/search/toolbar)
@@ -202,11 +223,21 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppBar(
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-      foregroundColor: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+      foregroundColor: isDark
+          ? AppColors.darkOnSurface
+          : AppColors.lightOnSurface,
       elevation: 0,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(2),
-        child: Container(color: AppColors.spreadsheetGreen, height: 2),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(2),
+        child: AuroraAccentBar(
+          colors: [
+            AppColors.spreadsheetGreen,
+            AppColors.auroraGreen,
+            AppColors.primary,
+            AppColors.auroraPink,
+            AppColors.spreadsheetGreen,
+          ],
+        ),
       ),
       titleSpacing: 0,
       title: GestureDetector(
@@ -215,11 +246,25 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
-              child: Text(
-                prov.fileName + (prov.isModified ? ' *' : ''),
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
+              child:
+                  Text(
+                        prov.fileName + (prov.isModified ? ' *' : ''),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )
+                      .animate(
+                        onPlay: (c) =>
+                            c.repeat(period: const Duration(seconds: 5)),
+                      )
+                      .shimmer(
+                        duration: 1600.ms,
+                        color: AppColors.spreadsheetGreen.withValues(
+                          alpha: 0.55,
+                        ),
+                      ),
             ),
           ],
         ),
@@ -242,13 +287,28 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           onSelected: (v) => _handleMenu(v, prov),
           itemBuilder: (_) => [
             PopupMenuItem(value: 'save_as', child: Text(l.commonSaveAs)),
-            PopupMenuItem(value: 'insert_row', child: Text(l.spreadsheetInsertRow)),
-            PopupMenuItem(value: 'delete_row', child: Text(l.spreadsheetDeleteRow)),
-            PopupMenuItem(value: 'insert_col', child: Text(l.spreadsheetInsertCol)),
-            PopupMenuItem(value: 'delete_col', child: Text(l.spreadsheetDeleteCol)),
+            PopupMenuItem(
+              value: 'insert_row',
+              child: Text(l.spreadsheetInsertRow),
+            ),
+            PopupMenuItem(
+              value: 'delete_row',
+              child: Text(l.spreadsheetDeleteRow),
+            ),
+            PopupMenuItem(
+              value: 'insert_col',
+              child: Text(l.spreadsheetInsertCol),
+            ),
+            PopupMenuItem(
+              value: 'delete_col',
+              child: Text(l.spreadsheetDeleteCol),
+            ),
             const PopupMenuDivider(),
             PopupMenuItem(value: 'sort_asc', child: Text(l.spreadsheetSortAsc)),
-            PopupMenuItem(value: 'sort_desc', child: Text(l.spreadsheetSortDesc)),
+            PopupMenuItem(
+              value: 'sort_desc',
+              child: Text(l.spreadsheetSortDesc),
+            ),
             const PopupMenuDivider(),
             if (!prov.hasFrozenPanes)
               PopupMenuItem(value: 'freeze', child: Text(l.freezePanes))
@@ -257,31 +317,22 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
             const PopupMenuDivider(),
             PopupMenuItem(
               value: 'auto_filter',
-              child: Text(prov.hasAutoFilter
-                  ? l.clearAutoFilter
-                  : l.autoFilter),
+              child: Text(
+                prov.hasAutoFilter ? l.clearAutoFilter : l.autoFilter,
+              ),
             ),
             PopupMenuItem(
               value: 'cond_format',
               child: Text(l.conditionalFormat),
             ),
-            PopupMenuItem(
-              value: 'insert_chart',
-              child: Text(l.insertChart),
-            ),
-            PopupMenuItem(
-              value: 'pivot_table',
-              child: Text(l.pivotTable),
-            ),
+            PopupMenuItem(value: 'insert_chart', child: Text(l.insertChart)),
+            PopupMenuItem(value: 'pivot_table', child: Text(l.pivotTable)),
             const PopupMenuDivider(),
             PopupMenuItem(
               value: 'data_validation',
               child: Text(l.dataValidation),
             ),
-            PopupMenuItem(
-              value: 'name_manager',
-              child: Text(l.nameManager),
-            ),
+            PopupMenuItem(value: 'name_manager', child: Text(l.nameManager)),
             PopupMenuItem(
               value: 'export_csv',
               child: Text(l.spreadsheetExportCsv),
@@ -289,7 +340,10 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
             const PopupMenuDivider(),
             PopupMenuItem(value: 'shortcuts', child: Text(l.keyboardShortcuts)),
             const PopupMenuDivider(),
-            PopupMenuItem(value: 'print_preview', child: Text(l.spreadsheetPrintPreview)),
+            PopupMenuItem(
+              value: 'print_preview',
+              child: Text(l.spreadsheetPrintPreview),
+            ),
             PopupMenuItem(value: 'print', child: Text(l.spreadsheetPrint)),
           ],
         ),
@@ -325,8 +379,11 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           ),
           const Spacer(),
           IconButton(
-            icon: Icon(LucideIcons.search, size: 20,
-              color: _showFindBar ? AppColors.spreadsheetGreen : null),
+            icon: Icon(
+              LucideIcons.search,
+              size: 20,
+              color: _showFindBar ? AppColors.spreadsheetGreen : null,
+            ),
             onPressed: () => setState(() {
               _showFindBar = !_showFindBar;
               if (!_showFindBar) {
@@ -339,7 +396,9 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           ),
           IconButton(
             icon: Icon(
-              _toolbarVisible ? LucideIcons.panelTopClose : LucideIcons.panelTop,
+              _toolbarVisible
+                  ? LucideIcons.panelTopClose
+                  : LucideIcons.panelTop,
               size: 20,
               color: _toolbarVisible ? AppColors.spreadsheetGreen : null,
             ),
@@ -355,7 +414,9 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final stats = prov.getSelectionStats();
     return Container(
-      color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+      color: isDark
+          ? AppColors.darkSurfaceElevated
+          : AppColors.lightSurfaceElevated,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -366,10 +427,14 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
             height: 24,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceElevated,
+              color: isDark
+                  ? AppColors.darkSurface
+                  : AppColors.lightSurfaceElevated,
               border: Border(
                 top: BorderSide(
-                  color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+                  color: isDark
+                      ? AppColors.darkOutline
+                      : AppColors.lightOutline,
                   width: isDark ? 0.5 : 1,
                 ),
               ),
@@ -379,22 +444,28 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
                 Text(
                   prov.selectedCellAddress,
                   style: TextStyle(
-                    color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                    color: isDark
+                        ? AppColors.darkOnSurface
+                        : AppColors.lightOnSurface,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const Spacer(),
-                ...stats.entries.map((e) => Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: Text(
-                        '${e.key}: ${e.value}',
-                        style: TextStyle(
-                          color: isDark ? AppColors.darkOnSurfaceAlt : AppColors.lightOnSurfaceAlt,
-                          fontSize: 11,
-                        ),
+                ...stats.entries.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Text(
+                      '${e.key}: ${e.value}',
+                      style: TextStyle(
+                        color: isDark
+                            ? AppColors.darkOnSurfaceAlt
+                            : AppColors.lightOnSurfaceAlt,
+                        fontSize: 11,
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -418,7 +489,11 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           // 찾기 행
           Row(
             children: [
-              const Icon(LucideIcons.search, size: 18, color: AppColors.grey600),
+              const Icon(
+                LucideIcons.search,
+                size: 18,
+                color: AppColors.grey600,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: SizedBox(
@@ -428,9 +503,17 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: l.findHint,
-                      hintStyle: const TextStyle(fontSize: 13, color: AppColors.grey500),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                      hintStyle: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.grey500,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       isDense: true,
                     ),
                     onChanged: (v) => prov.findAll(v),
@@ -439,7 +522,13 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
               ),
               const SizedBox(width: 4),
               if (matchText.isNotEmpty)
-                Text(matchText, style: const TextStyle(fontSize: 11, color: AppColors.grey600)),
+                Text(
+                  matchText,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.grey600,
+                  ),
+                ),
               IconButton(
                 icon: const Icon(LucideIcons.chevronUp, size: 18),
                 onPressed: prov.findPrev,
@@ -472,7 +561,11 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           // 바꾸기 행
           Row(
             children: [
-              const Icon(LucideIcons.replace, size: 18, color: AppColors.grey600),
+              const Icon(
+                LucideIcons.replace,
+                size: 18,
+                color: AppColors.grey600,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: SizedBox(
@@ -482,9 +575,17 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
                     style: const TextStyle(fontSize: 13),
                     decoration: InputDecoration(
                       hintText: l.replaceHint,
-                      hintStyle: const TextStyle(fontSize: 13, color: AppColors.grey500),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                      hintStyle: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.grey500,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       isDense: true,
                     ),
                   ),
@@ -492,7 +593,8 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
               ),
               const SizedBox(width: 4),
               TextButton(
-                onPressed: () => prov.replaceOne(_findCtrl.text, _replaceCtrl.text),
+                onPressed: () =>
+                    prov.replaceOne(_findCtrl.text, _replaceCtrl.text),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: const Size(0, 32),
@@ -500,12 +602,16 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
                 child: Text(l.replaceOne, style: const TextStyle(fontSize: 12)),
               ),
               TextButton(
-                onPressed: () => prov.replaceAllMatches(_findCtrl.text, _replaceCtrl.text),
+                onPressed: () =>
+                    prov.replaceAllMatches(_findCtrl.text, _replaceCtrl.text),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: const Size(0, 32),
                 ),
-                child: Text(l.replaceAllBtn, style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  l.replaceAllBtn,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -546,8 +652,9 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
         _showInsertChartDialog(prov);
       case 'pivot_table':
         showDialog(
-            context: context,
-            builder: (ctx) => const PivotTableDialog());
+          context: context,
+          builder: (ctx) => const PivotTableDialog(),
+        );
       case 'data_validation':
         _showDataValidationDialog();
       case 'name_manager':
@@ -567,10 +674,7 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
   }
 
   void _showNameManagerDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => const NameManagerDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const NameManagerDialog());
   }
 
   void _exportCsv(SpreadsheetProvider prov) async {
@@ -609,7 +713,6 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
   // ══════════════════════ 조건부 서식 다이얼로그 ══════════════════════
 
   void _showConditionalFormatDialog(SpreadsheetProvider prov) {
-    final l = AppLocalizations.of(context)!;
     ConditionType selectedType = ConditionType.greaterThan;
     final value1Ctrl = TextEditingController();
     final value2Ctrl = TextEditingController();
@@ -632,183 +735,195 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l.conditionalFormat),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 조건 타입 선택
-                DropdownButtonFormField<ConditionType>(
-                  initialValue: selectedType,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l.conditionType,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  items: [
-                    DropdownMenuItem(
-                      value: ConditionType.greaterThan,
-                      child: Text(l.condGreaterThan),
-                    ),
-                    DropdownMenuItem(
-                      value: ConditionType.lessThan,
-                      child: Text(l.condLessThan),
-                    ),
-                    DropdownMenuItem(
-                      value: ConditionType.equalTo,
-                      child: Text(l.condEqualTo),
-                    ),
-                    DropdownMenuItem(
-                      value: ConditionType.between,
-                      child: Text(l.condBetween),
-                    ),
-                    DropdownMenuItem(
-                      value: ConditionType.textContains,
-                      child: Text(l.condTextContains),
-                    ),
-                    DropdownMenuItem(
-                      value: ConditionType.isEmpty,
-                      child: Text(l.condIsEmpty),
-                    ),
-                    DropdownMenuItem(
-                      value: ConditionType.isNotEmpty,
-                      child: Text(l.condIsNotEmpty),
-                    ),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) {
-                      setDialogState(() => selectedType = v);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                // 값 입력
-                if (selectedType != ConditionType.isEmpty &&
-                    selectedType != ConditionType.isNotEmpty) ...[
-                  TextField(
-                    controller: value1Ctrl,
+        builder: (ctx, setDialogState) {
+          final l = AppLocalizations.of(ctx)!;
+          return AlertDialog(
+            title: Text(l.conditionalFormat),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 조건 타입 선택
+                  DropdownButtonFormField<ConditionType>(
+                    initialValue: selectedType,
+                    isExpanded: true,
                     decoration: InputDecoration(
-                      labelText: l.condValue,
+                      labelText: l.conditionType,
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),
+                    items: [
+                      DropdownMenuItem(
+                        value: ConditionType.greaterThan,
+                        child: Text(l.condGreaterThan),
+                      ),
+                      DropdownMenuItem(
+                        value: ConditionType.lessThan,
+                        child: Text(l.condLessThan),
+                      ),
+                      DropdownMenuItem(
+                        value: ConditionType.equalTo,
+                        child: Text(l.condEqualTo),
+                      ),
+                      DropdownMenuItem(
+                        value: ConditionType.between,
+                        child: Text(l.condBetween),
+                      ),
+                      DropdownMenuItem(
+                        value: ConditionType.textContains,
+                        child: Text(l.condTextContains),
+                      ),
+                      DropdownMenuItem(
+                        value: ConditionType.isEmpty,
+                        child: Text(l.condIsEmpty),
+                      ),
+                      DropdownMenuItem(
+                        value: ConditionType.isNotEmpty,
+                        child: Text(l.condIsNotEmpty),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setDialogState(() => selectedType = v);
+                      }
+                    },
                   ),
-                  if (selectedType == ConditionType.between) ...[
-                    const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+                  // 값 입력
+                  if (selectedType != ConditionType.isEmpty &&
+                      selectedType != ConditionType.isNotEmpty) ...[
                     TextField(
-                      controller: value2Ctrl,
+                      controller: value1Ctrl,
                       decoration: InputDecoration(
-                        labelText: l.condValue2,
+                        labelText: l.condValue,
                         border: const OutlineInputBorder(),
                         isDense: true,
                       ),
                     ),
+                    if (selectedType == ConditionType.between) ...[
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: value2Ctrl,
+                        decoration: InputDecoration(
+                          labelText: l.condValue2,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-                const SizedBox(height: 16),
-                // 서식 프리셋
-                Text(l.condFormatStyle,
+                  const SizedBox(height: 16),
+                  // 서식 프리셋
+                  Text(
+                    l.condFormatStyle,
                     style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _condPresetChip(
-                      ctx,
-                      AppColors.error.withValues(alpha: 0.15),
-                      AppColors.error,
-                      selectedBg == AppColors.error.withValues(alpha: 0.15),
-                      () => setDialogState(() {
-                        selectedBg =
-                            AppColors.error.withValues(alpha: 0.15);
-                        selectedText = AppColors.error;
-                      }),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
-                    _condPresetChip(
-                      ctx,
-                      AppColors.warning.withValues(alpha: 0.15),
-                      AppColors.warning,
-                      selectedBg ==
-                          AppColors.warning.withValues(alpha: 0.15),
-                      () => setDialogState(() {
-                        selectedBg =
-                            AppColors.warning.withValues(alpha: 0.15);
-                        selectedText = AppColors.warning;
-                      }),
-                    ),
-                    _condPresetChip(
-                      ctx,
-                      AppColors.success.withValues(alpha: 0.15),
-                      AppColors.success,
-                      selectedBg ==
-                          AppColors.success.withValues(alpha: 0.15),
-                      () => setDialogState(() {
-                        selectedBg =
-                            AppColors.success.withValues(alpha: 0.15);
-                        selectedText = AppColors.success;
-                      }),
-                    ),
-                    _condPresetChip(
-                      ctx,
-                      AppColors.info.withValues(alpha: 0.15),
-                      AppColors.info,
-                      selectedBg == AppColors.info.withValues(alpha: 0.15),
-                      () => setDialogState(() {
-                        selectedBg =
-                            AppColors.info.withValues(alpha: 0.15);
-                        selectedText = AppColors.info;
-                      }),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _condPresetChip(
+                        ctx,
+                        AppColors.error.withValues(alpha: 0.15),
+                        AppColors.error,
+                        selectedBg == AppColors.error.withValues(alpha: 0.15),
+                        () => setDialogState(() {
+                          selectedBg = AppColors.error.withValues(alpha: 0.15);
+                          selectedText = AppColors.error;
+                        }),
+                      ),
+                      _condPresetChip(
+                        ctx,
+                        AppColors.warning.withValues(alpha: 0.15),
+                        AppColors.warning,
+                        selectedBg == AppColors.warning.withValues(alpha: 0.15),
+                        () => setDialogState(() {
+                          selectedBg = AppColors.warning.withValues(
+                            alpha: 0.15,
+                          );
+                          selectedText = AppColors.warning;
+                        }),
+                      ),
+                      _condPresetChip(
+                        ctx,
+                        AppColors.success.withValues(alpha: 0.15),
+                        AppColors.success,
+                        selectedBg == AppColors.success.withValues(alpha: 0.15),
+                        () => setDialogState(() {
+                          selectedBg = AppColors.success.withValues(
+                            alpha: 0.15,
+                          );
+                          selectedText = AppColors.success;
+                        }),
+                      ),
+                      _condPresetChip(
+                        ctx,
+                        AppColors.info.withValues(alpha: 0.15),
+                        AppColors.info,
+                        selectedBg == AppColors.info.withValues(alpha: 0.15),
+                        () => setDialogState(() {
+                          selectedBg = AppColors.info.withValues(alpha: 0.15);
+                          selectedText = AppColors.info;
+                        }),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            // 기존 규칙 초기화
-            if (prov.condRules.isNotEmpty)
+            actions: [
+              // 기존 규칙 초기화
+              if (prov.condRules.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    prov.clearConditionalFormats();
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(l.condClearAll),
+                ),
               TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l.commonCancel),
+              ),
+              FilledButton(
                 onPressed: () {
-                  prov.clearConditionalFormats();
+                  prov.addConditionalFormat(
+                    ConditionalFormatRule(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      type: selectedType,
+                      value1: value1Ctrl.text,
+                      value2: value2Ctrl.text,
+                      bgColor: selectedBg,
+                      textColor: selectedText,
+                      startRow: r0,
+                      startCol: c0,
+                      endRow: r1,
+                      endCol: c1,
+                    ),
+                  );
                   Navigator.pop(ctx);
                 },
-                child: Text(l.condClearAll),
+                child: Text(l.condApply),
               ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                prov.addConditionalFormat(ConditionalFormatRule(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  type: selectedType,
-                  value1: value1Ctrl.text,
-                  value2: value2Ctrl.text,
-                  bgColor: selectedBg,
-                  textColor: selectedText,
-                  startRow: r0,
-                  startCol: c0,
-                  endRow: r1,
-                  endCol: c1,
-                ));
-                Navigator.pop(ctx);
-              },
-              child: Text(l.condApply),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _condPresetChip(BuildContext ctx, Color bg, Color text,
-      bool isSelected, VoidCallback onTap) {
+  Widget _condPresetChip(
+    BuildContext ctx,
+    Color bg,
+    Color text,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -838,121 +953,130 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
   // ══════════════════════ 차트 삽입 ══════════════════════
 
   void _showInsertChartDialog(SpreadsheetProvider prov) {
-    final l = AppLocalizations.of(context)!;
     ChartType selectedType = ChartType.bar;
-    final titleCtrl = TextEditingController(text: l.chartDefaultTitle);
+    final titleCtrl = TextEditingController(
+      text: AppLocalizations.of(context)!.chartDefaultTitle,
+    );
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l.insertChart),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 차트 타입 선택
-              DropdownButtonFormField<ChartType>(
-                initialValue: selectedType,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: l.chartType,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: ChartType.bar,
-                    child: Text(l.chartBar),
+        builder: (ctx, setDialogState) {
+          final l = AppLocalizations.of(ctx)!;
+          return AlertDialog(
+            title: Text(l.insertChart),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 차트 타입 선택
+                DropdownButtonFormField<ChartType>(
+                  initialValue: selectedType,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l.chartType,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
                   ),
-                  DropdownMenuItem(
-                    value: ChartType.line,
-                    child: Text(l.chartLine),
-                  ),
-                  DropdownMenuItem(
-                    value: ChartType.pie,
-                    child: Text(l.chartPie),
-                  ),
-                ],
-                onChanged: (v) {
-                  if (v != null) {
-                    setDialogState(() => selectedType = v);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              // 제목
-              TextField(
-                controller: titleCtrl,
-                decoration: InputDecoration(
-                  labelText: l.chartTitle,
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // 데이터 범위 안내
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(ctx).brightness == Brightness.dark
-                      ? AppColors.darkSurfaceElevated
-                      : AppColors.grey100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline,
-                        size: 16, color: AppColors.grey600),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l.chartDataHint,
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.grey600),
-                      ),
+                  items: [
+                    DropdownMenuItem(
+                      value: ChartType.bar,
+                      child: Text(l.chartBar),
+                    ),
+                    DropdownMenuItem(
+                      value: ChartType.line,
+                      child: Text(l.chartLine),
+                    ),
+                    DropdownMenuItem(
+                      value: ChartType.pie,
+                      child: Text(l.chartPie),
                     ),
                   ],
+                  onChanged: (v) {
+                    if (v != null) {
+                      setDialogState(() => selectedType = v);
+                    }
+                  },
                 ),
+                const SizedBox(height: 12),
+                // 제목
+                TextField(
+                  controller: titleCtrl,
+                  decoration: InputDecoration(
+                    labelText: l.chartTitle,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 데이터 범위 안내
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(ctx).brightness == Brightness.dark
+                        ? AppColors.darkSurfaceElevated
+                        : AppColors.grey100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.info,
+                        size: 16,
+                        color: AppColors.grey600,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l.chartDataHint,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.grey600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l.commonCancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  final (labels, values) = prov.extractChartData();
+                  if (values.isEmpty) return;
+                  final chartData = ChartData(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    type: selectedType,
+                    title: titleCtrl.text.trim().isEmpty
+                        ? l.chartDefaultTitle
+                        : titleCtrl.text.trim(),
+                    labels: labels,
+                    values: values,
+                  );
+                  // 차트 데이터 저장
+                  prov.addChart({
+                    'id': chartData.id,
+                    'type': selectedType.name,
+                    'title': chartData.title,
+                    'labels': labels,
+                    'values': values,
+                  });
+                  // 차트 뷰어 열기
+                  showDialog(
+                    context: context,
+                    builder: (_) => ChartViewerDialog(data: chartData),
+                  );
+                },
+                child: Text(l.chartCreate),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                final (labels, values) = prov.extractChartData();
-                if (values.isEmpty) return;
-                final chartData = ChartData(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  type: selectedType,
-                  title: titleCtrl.text.trim().isEmpty
-                      ? l.chartDefaultTitle
-                      : titleCtrl.text.trim(),
-                  labels: labels,
-                  values: values,
-                );
-                // 차트 데이터 저장
-                prov.addChart({
-                  'id': chartData.id,
-                  'type': selectedType.name,
-                  'title': chartData.title,
-                  'labels': labels,
-                  'values': values,
-                });
-                // 차트 뷰어 열기
-                showDialog(
-                  context: context,
-                  builder: (_) => ChartViewerDialog(data: chartData),
-                );
-              },
-              child: Text(l.chartCreate),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1054,7 +1178,10 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     return (colWidths[col] * scale, rowHeights[row] * scale);
   }
 
-  Future<pw.Document> _buildPdf(SpreadsheetProvider prov, PrintSetup setup) async {
+  Future<pw.Document> _buildPdf(
+    SpreadsheetProvider prov,
+    PrintSetup setup,
+  ) async {
     final l = AppLocalizations.of(context)!;
     await _ensureFont();
     final pdf = pw.Document();
@@ -1072,11 +1199,13 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     final pageFormat = setup.pageFormat;
 
     if (maxRow < 0 || maxCol < 0) {
-      pdf.addPage(pw.Page(
-        pageFormat: pageFormat,
-        theme: pdfTheme,
-        build: (_) => pw.Center(child: pw.Text(l.spreadsheetNoData)),
-      ));
+      pdf.addPage(
+        pw.Page(
+          pageFormat: pageFormat,
+          theme: pdfTheme,
+          build: (_) => pw.Center(child: pw.Text(l.spreadsheetNoData)),
+        ),
+      );
       return pdf;
     }
 
@@ -1151,192 +1280,211 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     for (int pageIdx = 0; pageIdx < pageRows.length; pageIdx++) {
       final (pgStart, pgEnd) = pageRows[pageIdx];
 
-      pdf.addPage(pw.Page(
-        pageFormat: pageFormat,
-        margin: pw.EdgeInsets.all(pdfMargin),
-        theme: pdfTheme,
-        build: (pw.Context ctx) {
-          final children = <pw.Widget>[];
-          double y = 0;
+      pdf.addPage(
+        pw.Page(
+          pageFormat: pageFormat,
+          margin: pw.EdgeInsets.all(pdfMargin),
+          theme: pdfTheme,
+          build: (pw.Context ctx) {
+            final children = <pw.Widget>[];
+            double y = 0;
 
-          for (int r = pgStart; r <= pgEnd; r++) {
-            final rh = rowHeights[r] * scale;
-            double x = 0;
+            for (int r = pgStart; r <= pgEnd; r++) {
+              final rh = rowHeights[r] * scale;
+              double x = 0;
 
-            for (int c = 0; c <= maxCol; c++) {
-              final cw = colWidths[c] * scale;
+              for (int c = 0; c <= maxCol; c++) {
+                final cw = colWidths[c] * scale;
 
-              // 병합 영역의 숨겨진 셀은 건너뜀
-              if (mergeHidden.contains('$r,$c')) {
-                x += cw;
-                continue;
-              }
-
-              // 병합 셀 크기 계산
-              final merge = prov.getMergeForCell(r, c);
-              final (cellW, cellH) = _calcCellSize(
-                row: r,
-                col: c,
-                merge: merge,
-                maxRow: maxRow,
-                maxCol: maxCol,
-                colWidths: colWidths,
-                rowHeights: rowHeights,
-                scale: scale,
-              );
-
-              // 병합 셀이 현재 페이지를 넘어가면 높이를 페이지에 맞게 클리핑
-              final maxAvailH = pageH - y;
-              final clippedH = min(cellH, maxAvailH);
-
-              final cellKey = '${prov.getColumnName(c)}${r + 1}';
-              final fmt = cellFormats[cellKey];
-              final display = prov.getCellDisplay(r, c);
-
-              // 셀 배경색
-              PdfColor? bgColor;
-              if (fmt?.backgroundColor != null) {
-                bgColor = _toPdfColor(fmt!.backgroundColor!);
-              }
-
-              // 텍스트 위젯
-              pw.Widget? textWidget;
-              if (display.isNotEmpty) {
-                double fontSize = baseFontSize * scale;
-                if (fmt?.fontSize != null && fmt!.fontSize! > 0) {
-                  fontSize = fmt.fontSize!.toDouble() * scale;
-                }
-                fontSize = max(fontSize, 4.0);
-
-                PdfColor textColor = PdfColors.black;
-                if (fmt?.textColor != null) {
-                  textColor = _toPdfColor(fmt!.textColor!);
+                // 병합 영역의 숨겨진 셀은 건너뜀
+                if (mergeHidden.contains('$r,$c')) {
+                  x += cw;
+                  continue;
                 }
 
-                // pw.TextDecoration
-                pw.TextDecoration textDeco = pw.TextDecoration.none;
-                if (fmt?.underline == true) {
-                  textDeco = pw.TextDecoration.underline;
+                // 병합 셀 크기 계산
+                final merge = prov.getMergeForCell(r, c);
+                final (cellW, cellH) = _calcCellSize(
+                  row: r,
+                  col: c,
+                  merge: merge,
+                  maxRow: maxRow,
+                  maxCol: maxCol,
+                  colWidths: colWidths,
+                  rowHeights: rowHeights,
+                  scale: scale,
+                );
+
+                // 병합 셀이 현재 페이지를 넘어가면 높이를 페이지에 맞게 클리핑
+                final maxAvailH = pageH - y;
+                final clippedH = min(cellH, maxAvailH);
+
+                final cellKey = '${prov.getColumnName(c)}${r + 1}';
+                final fmt = cellFormats[cellKey];
+                final display = prov.getCellDisplay(r, c);
+
+                // 셀 배경색
+                PdfColor? bgColor;
+                if (fmt?.backgroundColor != null) {
+                  bgColor = _toPdfColor(fmt!.backgroundColor!);
                 }
 
-                // fontStyle: italic 지원
-                final fontStyle = fmt?.italic == true
-                    ? pw.FontStyle.italic
-                    : pw.FontStyle.normal;
-                final fontWeight = fmt?.bold == true
-                    ? pw.FontWeight.bold
-                    : pw.FontWeight.normal;
+                // 텍스트 위젯
+                pw.Widget? textWidget;
+                if (display.isNotEmpty) {
+                  double fontSize = baseFontSize * scale;
+                  if (fmt?.fontSize != null && fmt!.fontSize! > 0) {
+                    fontSize = fmt.fontSize!.toDouble() * scale;
+                  }
+                  fontSize = max(fontSize, 4.0);
 
-                textWidget = pw.Text(
-                  display,
-                  style: pw.TextStyle(
-                    font: font,
-                    fontBold: font,
-                    fontItalic: font,
-                    fontBoldItalic: font,
-                    fontSize: fontSize,
-                    color: textColor,
-                    fontWeight: fontWeight,
-                    fontStyle: fontStyle,
-                    decoration: textDeco,
+                  PdfColor textColor = PdfColors.black;
+                  if (fmt?.textColor != null) {
+                    textColor = _toPdfColor(fmt!.textColor!);
+                  }
+
+                  // pw.TextDecoration
+                  pw.TextDecoration textDeco = pw.TextDecoration.none;
+                  if (fmt?.underline == true) {
+                    textDeco = pw.TextDecoration.underline;
+                  }
+
+                  // fontStyle: italic 지원
+                  final fontStyle = fmt?.italic == true
+                      ? pw.FontStyle.italic
+                      : pw.FontStyle.normal;
+                  final fontWeight = fmt?.bold == true
+                      ? pw.FontWeight.bold
+                      : pw.FontWeight.normal;
+
+                  textWidget = pw.Text(
+                    display,
+                    style: pw.TextStyle(
+                      font: font,
+                      fontBold: font,
+                      fontItalic: font,
+                      fontBoldItalic: font,
+                      fontSize: fontSize,
+                      color: textColor,
+                      fontWeight: fontWeight,
+                      fontStyle: fontStyle,
+                      decoration: textDeco,
+                    ),
+                    textAlign: _toPwTextAlign(fmt),
+                    maxLines: fmt?.wrapText == true ? null : 1,
+                    overflow: pw.TextOverflow.clip,
+                  );
+                }
+
+                // 테두리 -- setup.showGridlines에 따라 조건부 렌더링
+                final pw.Border? border;
+                if (setup.showGridlines) {
+                  border = pw.Border(
+                    top: r == pgStart
+                        ? const pw.BorderSide(
+                            color: borderColor,
+                            width: borderWidth,
+                          )
+                        : pw.BorderSide.none,
+                    left: c == 0
+                        ? const pw.BorderSide(
+                            color: borderColor,
+                            width: borderWidth,
+                          )
+                        : pw.BorderSide.none,
+                    right: const pw.BorderSide(
+                      color: borderColor,
+                      width: borderWidth,
+                    ),
+                    bottom: const pw.BorderSide(
+                      color: borderColor,
+                      width: borderWidth,
+                    ),
+                  );
+                } else {
+                  border = null;
+                }
+
+                children.add(
+                  pw.Positioned(
+                    left: x,
+                    top: y,
+                    child: pw.SizedBox(
+                      width: cellW,
+                      height: clippedH,
+                      child: pw.Container(
+                        padding: pw.EdgeInsets.symmetric(
+                          horizontal: cellPadH,
+                          vertical: cellPadV,
+                        ),
+                        alignment: _toPwCellAlign(fmt),
+                        decoration: pw.BoxDecoration(
+                          color: bgColor,
+                          border: border,
+                        ),
+                        child: textWidget != null
+                            ? pw.ClipRect(child: textWidget)
+                            : null,
+                      ),
+                    ),
                   ),
-                  textAlign: _toPwTextAlign(fmt),
-                  maxLines: fmt?.wrapText == true ? null : 1,
-                  overflow: pw.TextOverflow.clip,
                 );
-              }
 
-              // 테두리 -- setup.showGridlines에 따라 조건부 렌더링
-              final pw.Border? border;
-              if (setup.showGridlines) {
-                border = pw.Border(
-                  top: r == pgStart
-                      ? const pw.BorderSide(
-                          color: borderColor, width: borderWidth)
-                      : pw.BorderSide.none,
-                  left: c == 0
-                      ? const pw.BorderSide(
-                          color: borderColor, width: borderWidth)
-                      : pw.BorderSide.none,
-                  right: const pw.BorderSide(
-                      color: borderColor, width: borderWidth),
-                  bottom: const pw.BorderSide(
-                      color: borderColor, width: borderWidth),
-                );
-              } else {
-                border = null;
+                x += cw;
               }
+              y += rh;
+            }
 
-              children.add(pw.Positioned(
-                left: x,
-                top: y,
-                child: pw.SizedBox(
-                  width: cellW,
-                  height: clippedH,
-                  child: pw.Container(
-                    padding: pw.EdgeInsets.symmetric(
-                      horizontal: cellPadH,
-                      vertical: cellPadV,
-                    ),
-                    alignment: _toPwCellAlign(fmt),
-                    decoration: pw.BoxDecoration(
-                      color: bgColor,
-                      border: border,
-                    ),
-                    child: textWidget != null
-                        ? pw.ClipRect(child: textWidget)
-                        : null,
+            // 페이지 헤더: 파일명 + 페이지 번호 (setup 옵션에 따라)
+            final headerStyle = pw.TextStyle(
+              font: font,
+              fontSize: 8,
+              color: PdfColors.grey600,
+            );
+            final headerChildren = <pw.Widget>[];
+            if (setup.showFileName) {
+              headerChildren.add(pw.Text(prov.fileName, style: headerStyle));
+            } else {
+              headerChildren.add(pw.SizedBox.shrink());
+            }
+            if (setup.showPageNumbers) {
+              headerChildren.add(
+                pw.Text(
+                  '${pageIdx + 1} / ${pageRows.length}',
+                  style: headerStyle,
+                ),
+              );
+            }
+
+            final columnChildren = <pw.Widget>[];
+            if (showHeader && headerChildren.isNotEmpty) {
+              columnChildren.add(
+                pw.Container(
+                  width: scaledTotalW,
+                  height: headerHeight,
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: headerChildren,
                   ),
                 ),
-              ));
-
-              x += cw;
+              );
+              columnChildren.add(pw.SizedBox(height: headerGap));
             }
-            y += rh;
-          }
-
-          // 페이지 헤더: 파일명 + 페이지 번호 (setup 옵션에 따라)
-          final headerStyle = pw.TextStyle(
-            font: font,
-            fontSize: 8,
-            color: PdfColors.grey600,
-          );
-          final headerChildren = <pw.Widget>[];
-          if (setup.showFileName) {
-            headerChildren.add(pw.Text(prov.fileName, style: headerStyle));
-          } else {
-            headerChildren.add(pw.SizedBox.shrink());
-          }
-          if (setup.showPageNumbers) {
-            headerChildren.add(
-              pw.Text('${pageIdx + 1} / ${pageRows.length}', style: headerStyle),
-            );
-          }
-
-          final columnChildren = <pw.Widget>[];
-          if (showHeader && headerChildren.isNotEmpty) {
-            columnChildren.add(pw.Container(
-              width: scaledTotalW,
-              height: headerHeight,
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: headerChildren,
+            columnChildren.add(
+              pw.SizedBox(
+                width: pageW,
+                height: pageH,
+                child: pw.Stack(children: children),
               ),
-            ));
-            columnChildren.add(pw.SizedBox(height: headerGap));
-          }
-          columnChildren.add(pw.SizedBox(
-            width: pageW,
-            height: pageH,
-            child: pw.Stack(children: children),
-          ));
+            );
 
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: columnChildren,
-          );
-        },
-      ));
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: columnChildren,
+            );
+          },
+        ),
+      );
     }
 
     return pdf;
@@ -1486,39 +1634,49 @@ class _PageSetupSheetState extends State<_PageSetupSheet> {
 
   String _paperLabel(PaperSize key) {
     switch (key) {
-      case PaperSize.a4: return widget.l.paperSizeA4;
-      case PaperSize.a5: return widget.l.paperSizeA5;
-      case PaperSize.letter: return widget.l.paperSizeLetter;
-      case PaperSize.legal: return widget.l.paperSizeLegal;
+      case PaperSize.a4:
+        return widget.l.paperSizeA4;
+      case PaperSize.a5:
+        return widget.l.paperSizeA5;
+      case PaperSize.letter:
+        return widget.l.paperSizeLetter;
+      case PaperSize.legal:
+        return widget.l.paperSizeLegal;
     }
   }
 
   String _marginLabel(MarginPreset key) {
     switch (key) {
-      case MarginPreset.normal: return widget.l.marginNormal;
-      case MarginPreset.narrow: return widget.l.marginNarrow;
-      case MarginPreset.wide: return widget.l.marginWide;
+      case MarginPreset.normal:
+        return widget.l.marginNormal;
+      case MarginPreset.narrow:
+        return widget.l.marginNarrow;
+      case MarginPreset.wide:
+        return widget.l.marginWide;
     }
   }
 
   String _scaleLabel(ScaleMode key) {
     switch (key) {
-      case ScaleMode.fitWidth: return widget.l.scaleFitWidth;
-      case ScaleMode.fitPage: return widget.l.scaleFitPage;
-      case ScaleMode.actual: return widget.l.scaleActual;
+      case ScaleMode.fitWidth:
+        return widget.l.scaleFitWidth;
+      case ScaleMode.fitPage:
+        return widget.l.scaleFitPage;
+      case ScaleMode.actual:
+        return widget.l.scaleActual;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = widget.l;
-    final bottomPad = MediaQuery.of(context).viewInsets.bottom
-        + MediaQuery.of(context).viewPadding.bottom + 16;
+    final bottomPad =
+        MediaQuery.of(context).viewInsets.bottom +
+        MediaQuery.of(context).viewPadding.bottom +
+        16;
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: 24, right: 24, top: 24, bottom: bottomPad,
-      ),
+      padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: bottomPad),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1534,23 +1692,38 @@ class _PageSetupSheetState extends State<_PageSetupSheet> {
             const SizedBox(height: 24),
 
             // ── 용지 크기 ──
-            Text(l.paperSize, style: const TextStyle(
-              fontWeight: FontWeight.w600, color: AppColors.grey800)),
+            Text(
+              l.paperSize,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.grey800,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: PrintSetup.paperSizes.map((s) => ChoiceChip(
-                label: Text(_paperLabel(s)),
-                selected: _draft.paperSize == s,
-                onSelected: (_) =>
-                    setState(() => _draft = _draft.copyWith(paperSize: s)),
-              )).toList(),
+              children: PrintSetup.paperSizes
+                  .map(
+                    (s) => ChoiceChip(
+                      label: Text(_paperLabel(s)),
+                      selected: _draft.paperSize == s,
+                      onSelected: (_) => setState(
+                        () => _draft = _draft.copyWith(paperSize: s),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 16),
 
             // ── 방향 ──
-            Text(l.orientationLabel, style: const TextStyle(
-              fontWeight: FontWeight.w600, color: AppColors.grey800)),
+            Text(
+              l.orientationLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.grey800,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -1558,46 +1731,68 @@ class _PageSetupSheetState extends State<_PageSetupSheet> {
                 ChoiceChip(
                   label: Text(l.orientationLandscape),
                   selected: _draft.isLandscape,
-                  onSelected: (_) =>
-                      setState(() => _draft = _draft.copyWith(isLandscape: true)),
+                  onSelected: (_) => setState(
+                    () => _draft = _draft.copyWith(isLandscape: true),
+                  ),
                 ),
                 ChoiceChip(
                   label: Text(l.orientationPortrait),
                   selected: !_draft.isLandscape,
-                  onSelected: (_) =>
-                      setState(() => _draft = _draft.copyWith(isLandscape: false)),
+                  onSelected: (_) => setState(
+                    () => _draft = _draft.copyWith(isLandscape: false),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
             // ── 여백 ──
-            Text(l.marginsLabel, style: const TextStyle(
-              fontWeight: FontWeight.w600, color: AppColors.grey800)),
+            Text(
+              l.marginsLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.grey800,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: PrintSetup.marginPresets.map((m) => ChoiceChip(
-                label: Text(_marginLabel(m)),
-                selected: _draft.marginPreset == m,
-                onSelected: (_) =>
-                    setState(() => _draft = _draft.copyWith(marginPreset: m)),
-              )).toList(),
+              children: PrintSetup.marginPresets
+                  .map(
+                    (m) => ChoiceChip(
+                      label: Text(_marginLabel(m)),
+                      selected: _draft.marginPreset == m,
+                      onSelected: (_) => setState(
+                        () => _draft = _draft.copyWith(marginPreset: m),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 16),
 
             // ── 배율 ──
-            Text(l.scaleLabel, style: const TextStyle(
-              fontWeight: FontWeight.w600, color: AppColors.grey800)),
+            Text(
+              l.scaleLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.grey800,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
-              children: PrintSetup.scaleModes.map((s) => ChoiceChip(
-                label: Text(_scaleLabel(s)),
-                selected: _draft.scaleMode == s,
-                onSelected: (_) =>
-                    setState(() => _draft = _draft.copyWith(scaleMode: s)),
-              )).toList(),
+              children: PrintSetup.scaleModes
+                  .map(
+                    (s) => ChoiceChip(
+                      label: Text(_scaleLabel(s)),
+                      selected: _draft.scaleMode == s,
+                      onSelected: (_) => setState(
+                        () => _draft = _draft.copyWith(scaleMode: s),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 16),
 

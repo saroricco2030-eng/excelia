@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:excelia/utils/constants.dart';
 
 /// 차트 타입 (9종)
@@ -88,7 +89,7 @@ class ChartViewerDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.white, size: 20),
+                  icon: const Icon(LucideIcons.x, color: AppColors.white, size: 20),
                   onPressed: () => Navigator.pop(context),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

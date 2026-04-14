@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -21,6 +22,7 @@ import 'package:excelia/screens/presentation/widgets/slide_canvas.dart';
 import 'package:excelia/screens/presentation/widgets/slide_thumbnail.dart';
 import 'package:excelia/screens/presentation/widgets/slideshow_element_builder.dart';
 import 'package:excelia/utils/constants.dart';
+import 'package:excelia/widgets/aurora_accent_bar.dart';
 
 class PresentationScreen extends StatefulWidget {
   const PresentationScreen({super.key});
@@ -246,9 +248,17 @@ class _PresentationScreenState extends State<PresentationScreen> {
     return AppBar(
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       foregroundColor: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(2),
-        child: Container(color: AppColors.presentationOrange, height: 2),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(2),
+        child: AuroraAccentBar(
+          colors: [
+            AppColors.presentationOrange,
+            AppColors.auroraAmber,
+            AppColors.auroraPink,
+            AppColors.primary,
+            AppColors.presentationOrange,
+          ],
+        ),
       ),
       leading: IconButton(
         icon: const Icon(LucideIcons.arrowLeft),
@@ -292,7 +302,17 @@ class _PresentationScreenState extends State<PresentationScreen> {
                     Flexible(
                       child: Text(provider.title,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 18)),
+                          style: const TextStyle(fontSize: 18))
+                          .animate(
+                            onPlay: (c) => c.repeat(
+                              period: const Duration(seconds: 5),
+                            ),
+                          )
+                          .shimmer(
+                            duration: 1600.ms,
+                            color: AppColors.presentationOrange
+                                .withValues(alpha: 0.55),
+                          ),
                     ),
                     if (provider.isDirty) ...[
                       const SizedBox(width: 6),
@@ -845,10 +865,10 @@ class _PresentationScreenState extends State<PresentationScreen> {
     PresentationProvider provider,
     int index,
   ) {
-    final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1032,12 +1052,12 @@ class _PresentationScreenState extends State<PresentationScreen> {
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       isDense: true,
                     ),
-                    items: const [
-                      DropdownMenuItem(value: null, child: Text('System')),
-                      DropdownMenuItem(value: 'NotoSansKR', child: Text('Noto Sans KR')),
-                      DropdownMenuItem(value: 'Roboto', child: Text('Roboto')),
-                      DropdownMenuItem(value: 'JetBrains Mono', child: Text('JetBrains Mono')),
-                      DropdownMenuItem(value: 'Serif', child: Text('Serif')),
+                    items: [
+                      DropdownMenuItem(value: null, child: Text(l.presentationFontSystem)),
+                      const DropdownMenuItem(value: 'NotoSansKR', child: Text('Noto Sans KR')),
+                      const DropdownMenuItem(value: 'Roboto', child: Text('Roboto')),
+                      const DropdownMenuItem(value: 'JetBrains Mono', child: Text('JetBrains Mono')),
+                      const DropdownMenuItem(value: 'Serif', child: Text('Serif')),
                     ],
                     onChanged: (v) {
                       provider.updateElement(
@@ -1500,34 +1520,36 @@ class _PresentationScreenState extends State<PresentationScreen> {
   }
 
   void _pickBackground(PresentationProvider provider) {
-    final l = AppLocalizations.of(context)!;
     const colors = AppColors.slideBackgrounds;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.presentationBgColor),
-        content: Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: colors.map((c) {
-            return GestureDetector(
-              onTap: () {
-                provider.setSlideBackground(provider.currentIndex, c);
-                Navigator.pop(ctx);
-              },
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: c,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.grey300),
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l.presentationBgColor),
+          content: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: colors.map((c) {
+              return GestureDetector(
+                onTap: () {
+                  provider.setSlideBackground(provider.currentIndex, c);
+                  Navigator.pop(ctx);
+                },
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: c,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.grey300),
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 

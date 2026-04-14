@@ -301,53 +301,55 @@ class _ColorButton extends StatelessWidget {
   }
 
   void _showColorPicker(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tooltip),
-        contentPadding: const EdgeInsets.all(16),
-        content: SizedBox(
-          width: 240,
-          child: Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: SpreadsheetToolbar._presetColors.map((c) {
-              return GestureDetector(
-                onTap: () {
-                  onColorSelected(c);
-                  Navigator.pop(ctx);
-                },
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: c,
-                    border: Border.all(
-                      color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return AlertDialog(
+          title: Text(tooltip),
+          contentPadding: const EdgeInsets.all(16),
+          content: SizedBox(
+            width: 240,
+            child: Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: SpreadsheetToolbar._presetColors.map((c) {
+                return GestureDetector(
+                  onTap: () {
+                    onColorSelected(c);
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: c,
+                      border: Border.all(
+                        color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    borderRadius: BorderRadius.circular(4),
+                    child: c == currentColor
+                        ? Icon(LucideIcons.check,
+                            size: 14,
+                            color: c.computeLuminance() > 0.5
+                                ? AppColors.black
+                                : AppColors.white)
+                        : null,
                   ),
-                  child: c == currentColor
-                      ? Icon(LucideIcons.check,
-                          size: 14,
-                          color: c.computeLuminance() > 0.5
-                              ? AppColors.black
-                              : AppColors.white)
-                      : null,
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.toolbarClose),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.toolbarClose),
+            ),
+          ],
+        );
+      },
     );
   }
 }

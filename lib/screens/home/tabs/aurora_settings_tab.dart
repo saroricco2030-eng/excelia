@@ -233,15 +233,15 @@ class AuroraSettingsTab extends StatelessWidget {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       minVerticalPadding: 12,
-      onTap: () => _showThemeDialog(context, l, isDark, appProv),
+      onTap: () => _showThemeDialog(context, appProv),
     );
   }
 
-  void _showThemeDialog(BuildContext context, AppLocalizations l, bool isDark,
-      AppProvider appProv) {
+  void _showThemeDialog(BuildContext context, AppProvider appProv) {
     showDialog(
       context: context,
       builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
         final isDarkDialog = Theme.of(ctx).brightness == Brightness.dark;
         return AlertDialog(
           backgroundColor: isDarkDialog
@@ -609,12 +609,11 @@ class AuroraSettingsTab extends StatelessWidget {
   }
 
   void _showResetDialog(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     showDialog(
       context: context,
       builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return AlertDialog(
           backgroundColor:
               isDark ? AppColors.darkSurface : AppColors.lightSurface,

@@ -192,41 +192,43 @@ class _SheetTabBarState extends State<SheetTabBar> {
   }
 
   void _showAddSheetDialog(SpreadsheetProvider prov) {
-    final l = AppLocalizations.of(context)!;
     final controller =
         TextEditingController(text: 'Sheet${prov.sheetNames.length + 1}');
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.sheetNew),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l.sheetName,
-            hintText: l.sheetNameHint,
-          ),
-          onSubmitted: (v) {
-            final name = v.trim();
-            if (name.isNotEmpty) prov.addSheet(name);
-            Navigator.pop(ctx);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = controller.text.trim();
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l.sheetNew),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l.sheetName,
+              hintText: l.sheetNameHint,
+            ),
+            onSubmitted: (v) {
+              final name = v.trim();
               if (name.isNotEmpty) prov.addSheet(name);
               Navigator.pop(ctx);
             },
-            child: Text(l.commonAdd),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) prov.addSheet(name);
+                Navigator.pop(ctx);
+              },
+              child: Text(l.commonAdd),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -257,27 +259,29 @@ class _SheetTabBarState extends State<SheetTabBar> {
   }
 
   void _confirmDelete(String name, SpreadsheetProvider prov) {
-    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.sheetDeleteTitle),
-        content: Text(l.sheetDeleteConfirm(name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () {
-              prov.deleteSheet(name);
-              Navigator.pop(ctx);
-            },
-            child: Text(l.commonDelete),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l.sheetDeleteTitle),
+          content: Text(l.sheetDeleteConfirm(name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () {
+                prov.deleteSheet(name);
+                Navigator.pop(ctx);
+              },
+              child: Text(l.commonDelete),
+            ),
+          ],
+        );
+      },
     );
   }
 }

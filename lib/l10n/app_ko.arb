@@ -574,6 +574,7 @@
   "presentationUnderline": "밑줄",
   "presentationStrikethrough": "취소선",
   "presentationFontFamily": "글꼴",
+  "presentationFontSystem": "시스템",
 
   "documentPageSetup": "페이지 설정",
   "documentHeader": "머리글",

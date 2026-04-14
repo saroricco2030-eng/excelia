@@ -538,40 +538,42 @@ class _SpreadsheetGridState extends State<SpreadsheetGrid> {
   // ────────────────── 셀 메모 다이얼로그 ──────────────────
 
   void _showCommentDialog(SpreadsheetProvider prov) {
-    final l = AppLocalizations.of(context)!;
     final existing = prov.getComment(prov.selectedRow, prov.selectedCol);
     final controller = TextEditingController(text: existing?.text ?? '');
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(existing != null ? l.editComment : l.addComment),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: l.commentHint,
-            border: const OutlineInputBorder(),
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(existing != null ? l.editComment : l.addComment),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: l.commentHint,
+              border: const OutlineInputBorder(),
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              prov.setComment(
-                prov.selectedRow,
-                prov.selectedCol,
-                controller.text.trim(),
-              );
-              Navigator.pop(ctx);
-            },
-            child: Text(l.commonSave),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                prov.setComment(
+                  prov.selectedRow,
+                  prov.selectedCol,
+                  controller.text.trim(),
+                );
+                Navigator.pop(ctx);
+              },
+              child: Text(l.commonSave),
+            ),
+          ],
+        );
+      },
     );
   }
 

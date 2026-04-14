@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pdfx/pdfx.dart';
@@ -9,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:excelia/l10n/app_localizations.dart';
 import 'package:excelia/utils/constants.dart';
+import 'package:excelia/widgets/aurora_accent_bar.dart';
 
 /// Native PDF viewer using pdfx (Android PdfRenderer / iOS CGPDFDocument).
 class PdfViewerScreen extends StatefulWidget {
@@ -134,14 +136,27 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       foregroundColor:
           isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(2),
-        child: Container(color: AppColors.pdfRed, height: 2),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(2),
+        child: AuroraAccentBar(
+          colors: [
+            AppColors.pdfRed,
+            AppColors.auroraPink,
+            AppColors.primary,
+            AppColors.auroraAmber,
+            AppColors.pdfRed,
+          ],
+        ),
       ),
       title: Text(
         _fileName ?? l.pdfViewer,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontSize: 17),
+      ).animate(
+        onPlay: (c) => c.repeat(period: const Duration(seconds: 5)),
+      ).shimmer(
+        duration: 1600.ms,
+        color: AppColors.pdfRed.withValues(alpha: 0.55),
       ),
       actions: [
         if (_filePath != null)

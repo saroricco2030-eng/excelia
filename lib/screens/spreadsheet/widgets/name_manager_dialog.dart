@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:excelia/l10n/app_localizations.dart';
 import 'package:excelia/providers/spreadsheet_provider.dart';
@@ -125,7 +126,7 @@ class _NameManagerDialogState extends State<NameManagerDialog> {
                                   color: textColor.withValues(alpha: 0.6),
                                   fontSize: 12)),
                           trailing: IconButton(
-                            icon: Icon(Icons.delete_outline,
+                            icon: Icon(LucideIcons.trash2,
                                 color: textColor.withValues(alpha: 0.5),
                                 size: 20),
                             onPressed: () {

@@ -52,26 +52,29 @@ class RecentFileTile extends StatelessWidget {
         confirmDismiss: (_) async {
           return await showDialog<bool>(
                 context: context,
-                builder: (ctx) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-                  ),
-                  title: Text(l.fileDeleteTitle),
-                  content: Text(l.fileDeleteConfirm(file.name)),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(l.commonCancel),
+                builder: (ctx) {
+                  final dl = AppLocalizations.of(ctx)!;
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusXL),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: Text(
-                        l.commonDelete,
-                        style: TextStyle(color: colorScheme.error),
+                    title: Text(dl.fileDeleteTitle),
+                    content: Text(dl.fileDeleteConfirm(file.name)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(dl.commonCancel),
                       ),
-                    ),
-                  ],
-                ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(
+                          dl.commonDelete,
+                          style: TextStyle(color: colorScheme.error),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ) ??
               false;
         },

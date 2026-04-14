@@ -1332,6 +1332,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presentationFontFamily => 'Font';
 
   @override
+  String get presentationFontSystem => 'System';
+
+  @override
   String get documentPageSetup => 'Page Setup';
 
   @override

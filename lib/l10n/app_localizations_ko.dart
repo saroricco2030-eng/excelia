@@ -1327,6 +1327,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get presentationFontFamily => '글꼴';
 
   @override
+  String get presentationFontSystem => '시스템';
+
+  @override
   String get documentPageSetup => '페이지 설정';
 
   @override

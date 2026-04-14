@@ -236,27 +236,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 레거시 포맷 또는 파싱 실패 시 — "외부 앱으로 열기" 확인 다이얼로그
   Future<void> _promptOpenExternal(BuildContext context, String filePath) async {
-    final l = AppLocalizations.of(context)!;
     final ext = FileUtils.getExtensionUpper(filePath);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(l.legacyFormatTitle),
-        content: Text(l.legacyFormatBody(ext)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l.commonCancel),
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l.openInExternalApp),
-          ),
-        ],
-      ),
+          title: Text(l.legacyFormatTitle),
+          content: Text(l.legacyFormatBody(ext)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.openInExternalApp),
+            ),
+          ],
+        );
+      },
     );
     if (confirmed != true || !context.mounted) return;
     await _openExternalApp(context, filePath);

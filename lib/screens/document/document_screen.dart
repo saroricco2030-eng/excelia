@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,7 @@ import 'package:excelia/screens/document/widgets/page_setup_sheet.dart';
 import 'package:excelia/screens/document/widgets/table_embed_builder.dart';
 import 'package:excelia/screens/document/widgets/table_insert_dialog.dart';
 import 'package:excelia/utils/constants.dart';
+import 'package:excelia/widgets/aurora_accent_bar.dart';
 
 class DocumentScreen extends StatefulWidget {
   const DocumentScreen({super.key});
@@ -186,9 +188,17 @@ class _DocumentScreenState extends State<DocumentScreen> {
     return AppBar(
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
       foregroundColor: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(2),
-        child: Container(color: AppColors.documentBlue, height: 2),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(2),
+        child: AuroraAccentBar(
+          colors: [
+            AppColors.documentBlue,
+            AppColors.primary,
+            AppColors.auroraPink,
+            AppColors.auroraGreen,
+            AppColors.documentBlue,
+          ],
+        ),
       ),
       leading: IconButton(
         icon: const Icon(LucideIcons.arrowLeft),
@@ -232,6 +242,13 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       provider.title,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 18),
+                    ).animate(
+                      onPlay: (c) => c.repeat(
+                        period: const Duration(seconds: 5),
+                      ),
+                    ).shimmer(
+                      duration: 1600.ms,
+                      color: AppColors.documentBlue.withValues(alpha: 0.55),
                     ),
                   ),
                   if (provider.isDirty) ...[
@@ -915,20 +932,23 @@ class _DocumentScreenState extends State<DocumentScreen> {
         if (provider.isDirty) {
           final confirm = await showDialog<bool>(
             context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(l.documentNew),
-              content: Text(l.documentNewConfirm),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(l.commonCancel),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(l.commonContinue),
-                ),
-              ],
-            ),
+            builder: (ctx) {
+              final dl = AppLocalizations.of(ctx)!;
+              return AlertDialog(
+                title: Text(dl.documentNew),
+                content: Text(dl.documentNewConfirm),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(dl.commonCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(dl.commonContinue),
+                  ),
+                ],
+              );
+            },
           );
           if (confirm != true) return;
         }
@@ -986,12 +1006,14 @@ class _DocumentScreenState extends State<DocumentScreen> {
         headerText: provider.headerText,
         footerText: provider.footerText,
         onApply: (setup, header, footer) {
+          // Capture localizations & messenger BEFORE pop — ctx will be unmounted after.
+          final l = AppLocalizations.of(ctx)!;
+          final messenger = ScaffoldMessenger.of(ctx);
           provider.setPageSetup(setup);
           provider.setHeaderText(header);
           provider.setFooterText(footer);
           Navigator.pop(ctx);
-          final l = AppLocalizations.of(ctx)!;
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(content: Text(l.documentPageSetupApplied)),
           );
         },
@@ -1214,28 +1236,30 @@ class _DocumentScreenState extends State<DocumentScreen> {
   }
 
   Future<void> _handleBack(DocumentProvider provider) async {
-    final l = AppLocalizations.of(context)!;
     if (provider.isDirty) {
       final result = await showDialog<String>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l.documentClose),
-          content: Text(l.documentUnsavedChanges),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'discard'),
-              child: Text(l.commonDoNotSave),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'cancel'),
-              child: Text(l.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, 'save'),
-              child: Text(l.commonSave),
-            ),
-          ],
-        ),
+        builder: (ctx) {
+          final l = AppLocalizations.of(ctx)!;
+          return AlertDialog(
+            title: Text(l.documentClose),
+            content: Text(l.documentUnsavedChanges),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, 'discard'),
+                child: Text(l.commonDoNotSave),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, 'cancel'),
+                child: Text(l.commonCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, 'save'),
+                child: Text(l.commonSave),
+              ),
+            ],
+          );
+        },
       );
       if (result == 'save') {
         await _save(provider);

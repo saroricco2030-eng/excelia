@@ -59,11 +59,33 @@ class _FormulaBarState extends State<FormulaBar> {
         return Container(
           height: 48,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.toolbarDark : AppColors.toolbarLight,
+            // Glass gradient (static, no blur — perf-safe over scrolling grid)
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      AppColors.toolbarDark,
+                      AppColors.darkSurfaceElevated.withValues(alpha: 0.86),
+                    ]
+                  : [
+                      AppColors.toolbarLight,
+                      AppColors.lightSurfaceElevated.withValues(alpha: 0.96),
+                    ],
+            ),
             border: Border(
+              top: BorderSide(
+                color: (isDark
+                        ? AppColors.glassDarkBorder
+                        : AppColors.glassLightBorder)
+                    .withValues(alpha: isDark ? 0.28 : 0.55),
+                width: 0.8,
+              ),
               bottom: BorderSide(
-                color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
-                width: isDark ? 0.5 : 1,
+                color: isDark
+                    ? AppColors.spreadsheetGreen.withValues(alpha: 0.35)
+                    : AppColors.spreadsheetGreen.withValues(alpha: 0.25),
+                width: 1,
               ),
             ),
           ),
