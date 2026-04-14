@@ -16,6 +16,7 @@ import 'package:excelia/providers/spreadsheet_provider.dart';
 import 'package:excelia/screens/common/keyboard_shortcuts_dialog.dart';
 import 'package:excelia/utils/constants.dart';
 import 'package:excelia/utils/snackbar_utils.dart';
+import 'package:excelia/utils/file_utils.dart';
 import 'widgets/spreadsheet_grid.dart';
 import 'widgets/formula_bar.dart';
 import 'widgets/toolbar.dart';
@@ -58,7 +59,20 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
         if (!ok && mounted) {
           final l = AppLocalizations.of(context)!;
           showExceliaSnackBar(context,
-            message: l.spreadsheetOpenError, isError: true);
+            message: l.spreadsheetOpenError,
+            isError: true,
+            actionLabel: l.openInExternalApp,
+            onAction: () async {
+              final err = await FileUtils.openWithExternalApp(arg);
+              if (err != null && mounted) {
+                showExceliaSnackBar(context,
+                  message: err.toLowerCase().contains('no app')
+                      ? l.externalAppError
+                      : l.externalAppOpenFailed(err),
+                  isError: true);
+              }
+            },
+          );
         }
       } else {
         prov.createNew();

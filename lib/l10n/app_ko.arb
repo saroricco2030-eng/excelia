@@ -105,6 +105,20 @@
   "newDocument": "새 문서",
   "newPresentation": "새 프레젠테이션",
   "pdfOpen": "PDF 열기",
+  "spreadsheetOpen": "스프레드시트 열기",
+  "homeOpenFile": "파일 열기",
+  "openInExternalApp": "외부 앱으로 열기",
+  "legacyFormatTitle": "구형 파일 포맷",
+  "legacyFormatBody": "{ext} 파일은 Excelia에서 직접 열 수 없습니다. 설치된 오피스 앱(한컴, MS Office, WPS 등)으로 여시겠습니까?",
+  "@legacyFormatBody": {
+    "placeholders": { "ext": { "type": "String" } }
+  },
+  "externalAppError": "외부 앱을 찾지 못했습니다. 오피스 앱을 설치해 주세요.",
+  "externalAppOpenFailed": "외부 앱으로 열기에 실패했습니다: {error}",
+  "@externalAppOpenFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "parseFailedOpenExternal": "파일을 읽지 못했습니다. 외부 앱으로 열어보시겠습니까?",
   "subtitleExcelCompat": "Excel 호환",
   "subtitleWordCompat": "Word 호환",
   "subtitlePptCompat": "PPT 호환",

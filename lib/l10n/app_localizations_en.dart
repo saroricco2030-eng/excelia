@@ -259,6 +259,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfOpen => 'Open PDF';
 
   @override
+  String get spreadsheetOpen => 'Open Spreadsheet';
+
+  @override
+  String get homeOpenFile => 'Open File';
+
+  @override
+  String get openInExternalApp => 'Open in External App';
+
+  @override
+  String get legacyFormatTitle => 'Legacy File Format';
+
+  @override
+  String legacyFormatBody(String ext) {
+    return '$ext files cannot be opened directly in Excelia. Would you like to open it with an installed office app (Hancom, MS Office, WPS, etc.)?';
+  }
+
+  @override
+  String get externalAppError =>
+      'No external app found. Please install an office app.';
+
+  @override
+  String externalAppOpenFailed(String error) {
+    return 'Failed to open in external app: $error';
+  }
+
+  @override
+  String get parseFailedOpenExternal =>
+      'Could not read the file. Open it with an external app?';
+
+  @override
   String get subtitleExcelCompat => 'Excel compatible';
 
   @override

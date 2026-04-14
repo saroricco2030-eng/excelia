@@ -16,6 +16,7 @@ class RecentFileTile extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onDelete;
   final VoidCallback onShare;
+  final VoidCallback? onOpenExternal;
 
   const RecentFileTile({
     super.key,
@@ -23,6 +24,7 @@ class RecentFileTile extends StatelessWidget {
     required this.onOpen,
     required this.onDelete,
     required this.onShare,
+    this.onOpenExternal,
   });
 
   @override
@@ -162,6 +164,8 @@ class RecentFileTile extends StatelessWidget {
                         switch (action) {
                           case _TileAction.open:
                             onOpen();
+                          case _TileAction.openExternal:
+                            onOpenExternal?.call();
                           case _TileAction.delete:
                             onDelete();
                           case _TileAction.share:
@@ -179,6 +183,17 @@ class RecentFileTile extends StatelessWidget {
                             ],
                           ),
                         ),
+                        if (onOpenExternal != null)
+                          PopupMenuItem(
+                            value: _TileAction.openExternal,
+                            child: Row(
+                              children: [
+                                const Icon(LucideIcons.appWindow, size: 18),
+                                const SizedBox(width: 10),
+                                Text(l.openInExternalApp),
+                              ],
+                            ),
+                          ),
                         PopupMenuItem(
                           value: _TileAction.share,
                           child: Row(
@@ -215,4 +230,4 @@ class RecentFileTile extends StatelessWidget {
   }
 }
 
-enum _TileAction { open, delete, share }
+enum _TileAction { open, openExternal, delete, share }

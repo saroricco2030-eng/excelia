@@ -14,6 +14,7 @@ import 'package:excelia/models/table_embed.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:excelia/screens/common/keyboard_shortcuts_dialog.dart';
 import 'package:excelia/utils/snackbar_utils.dart';
+import 'package:excelia/utils/file_utils.dart';
 import 'package:excelia/providers/document_provider.dart';
 import 'package:excelia/screens/document/widgets/page_setup_sheet.dart';
 import 'package:excelia/screens/document/widgets/table_embed_builder.dart';
@@ -66,7 +67,20 @@ class _DocumentScreenState extends State<DocumentScreen> {
           if (!mounted) return;
           final l = AppLocalizations.of(context)!;
           showExceliaSnackBar(context,
-            message: l.documentOpenError(e.toString()), isError: true);
+            message: l.documentOpenError(e.toString()),
+            isError: true,
+            actionLabel: l.openInExternalApp,
+            onAction: () async {
+              final err = await FileUtils.openWithExternalApp(arg);
+              if (err != null && mounted) {
+                showExceliaSnackBar(context,
+                  message: err.toLowerCase().contains('no app')
+                      ? l.externalAppError
+                      : l.externalAppOpenFailed(err),
+                  isError: true);
+              }
+            },
+          );
           _provider.createNew();
         }
       } else {

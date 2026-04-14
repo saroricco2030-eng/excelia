@@ -54,5 +54,10 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- 외부 앱으로 파일 열기 (open_filex) — 구형 xls/doc/ppt 등 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:mimeType="*/*"/>
+        </intent>
     </queries>
 </manifest>

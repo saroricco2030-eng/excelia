@@ -9,6 +9,7 @@ import 'package:excelia/l10n/app_localizations.dart';
 import 'package:excelia/providers/app_provider.dart';
 import 'package:excelia/screens/common/keyboard_shortcuts_dialog.dart';
 import 'package:excelia/utils/snackbar_utils.dart';
+import 'package:excelia/utils/file_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -65,8 +66,20 @@ class _PresentationScreenState extends State<PresentationScreen> {
         } catch (e) {
           if (!mounted) return;
           final l = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.presentationOpenError(e.toString()))),
+          showExceliaSnackBar(context,
+            message: l.presentationOpenError(e.toString()),
+            isError: true,
+            actionLabel: l.openInExternalApp,
+            onAction: () async {
+              final err = await FileUtils.openWithExternalApp(arg);
+              if (err != null && mounted) {
+                showExceliaSnackBar(context,
+                  message: err.toLowerCase().contains('no app')
+                      ? l.externalAppError
+                      : l.externalAppOpenFailed(err),
+                  isError: true);
+              }
+            },
           );
           provider.createNew();
           _titleController.text = provider.title;

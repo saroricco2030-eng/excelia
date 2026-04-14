@@ -13,14 +13,18 @@ import '../widgets/empty_state.dart';
 
 class BentoDashboardTab extends StatefulWidget {
   final VoidCallback onPickFile;
+  final void Function(DocumentType) onPickFileByType;
   final void Function(RecentFile) onOpenRecent;
   final void Function(RecentFile) onShareFile;
+  final void Function(RecentFile) onOpenExternal;
 
   const BentoDashboardTab({
     super.key,
     required this.onPickFile,
+    required this.onPickFileByType,
     required this.onOpenRecent,
     required this.onShareFile,
+    required this.onOpenExternal,
   });
 
   @override
@@ -76,10 +80,11 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
   }
 
   // ---------------------------------------------------------------------------
-  // Create-new bottom sheet
+  // Open-file bottom sheet (FAB)
+  //   Home quick actions handle "create new"; FAB handles "open existing".
   // ---------------------------------------------------------------------------
 
-  void _showCreateNewSheet() {
+  void _showOpenFileSheet() {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.transparent,
@@ -112,60 +117,77 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Drag handle
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDarkSheet
-                      ? AppColors.darkOutline
-                      : AppColors.lightOutline,
-                  borderRadius: BorderRadius.circular(2),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDarkSheet
+                        ? AppColors.darkOutline
+                        : AppColors.lightOutline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              // Spreadsheet (primary)
-              _CreateNewItem(
+              const SizedBox(height: 20),
+              // Sheet title
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 16),
+                child: Text(
+                  l.homeOpenFile,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: isDarkSheet
+                        ? AppColors.darkOnSurface
+                        : AppColors.lightOnSurface,
+                  ),
+                ),
+              ),
+              // Spreadsheet open (primary — most-used)
+              _OpenFileItem(
                 icon: LucideIcons.table,
                 color: AppColors.spreadsheetGreen,
-                label: l.newSpreadsheet,
+                label: l.spreadsheetOpen,
                 onTap: () {
                   Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/spreadsheet');
+                  widget.onPickFileByType(DocumentType.spreadsheet);
                 },
               ),
               const SizedBox(height: 8),
-              // PDF open (secondary)
-              _CreateNewItem(
-                icon: LucideIcons.fileSearch,
+              // PDF open (primary — most-used)
+              _OpenFileItem(
+                icon: LucideIcons.fileText,
                 color: AppColors.pdfRed,
                 label: l.pdfOpen,
                 onTap: () {
                   Navigator.pop(ctx);
-                  widget.onPickFile();
+                  widget.onPickFileByType(DocumentType.pdf);
                 },
               ),
               const SizedBox(height: 8),
-              // Document
-              _CreateNewItem(
+              // Document open
+              _OpenFileItem(
                 icon: LucideIcons.fileText,
                 color: AppColors.documentBlue,
-                label: l.newDocument,
+                label: l.documentOpenFile,
                 onTap: () {
                   Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/document');
+                  widget.onPickFileByType(DocumentType.document);
                 },
               ),
               const SizedBox(height: 8),
-              // Presentation
-              _CreateNewItem(
+              // Presentation open
+              _OpenFileItem(
                 icon: LucideIcons.presentation,
                 color: AppColors.presentationOrange,
-                label: l.newPresentation,
+                label: l.presentationOpenTitle,
                 onTap: () {
                   Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/presentation');
+                  widget.onPickFileByType(DocumentType.presentation);
                 },
               ),
               const SizedBox(height: 16),
@@ -403,7 +425,8 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                                   color: AppColors.pdfRed,
                                   lightTint: AppColors.pdfTintLight,
                                   darkTint: AppColors.pdfTintDark,
-                                  onTap: widget.onPickFile,
+                                  onTap: () => widget
+                                      .onPickFileByType(DocumentType.pdf),
                                 ),
                                 const SizedBox(width: AppSizes.gap12),
                                 QuickActionCard(
@@ -475,6 +498,8 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
                               },
                               onShare: () =>
                                   widget.onShareFile(recentFiles[i]),
+                              onOpenExternal: () =>
+                                  widget.onOpenExternal(recentFiles[i]),
                             ),
                           ),
                           childCount: recentFiles.length,
@@ -494,14 +519,15 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
             ),
           ),
         ),
-        // -- FAB: New file --
+        // -- FAB: Open existing file --
         Positioned(
           right: 20,
           bottom: MediaQuery.of(context).viewPadding.bottom + 16,
           child: FloatingActionButton(
-            onPressed: _showCreateNewSheet,
+            onPressed: _showOpenFileSheet,
             backgroundColor: AppColors.primary,
-            child: const Icon(LucideIcons.plus, color: AppColors.white),
+            tooltip: AppLocalizations.of(context)!.homeOpenFile,
+            child: const Icon(LucideIcons.folderOpen, color: AppColors.white),
           ),
         ),
       ],
@@ -510,16 +536,16 @@ class _BentoDashboardTabState extends State<BentoDashboardTab> {
 }
 
 // =============================================================================
-// _CreateNewItem -- bottom sheet row item
+// _OpenFileItem -- bottom sheet row item for "Open file" FAB
 // =============================================================================
 
-class _CreateNewItem extends StatelessWidget {
+class _OpenFileItem extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label;
   final VoidCallback onTap;
 
-  const _CreateNewItem({
+  const _OpenFileItem({
     required this.icon,
     required this.color,
     required this.label,
@@ -570,7 +596,7 @@ class _CreateNewItem extends StatelessWidget {
               ),
             ),
             Icon(
-              LucideIcons.plus,
+              LucideIcons.chevronRight,
               size: 18,
               color: isDark
                   ? AppColors.darkOnSurfaceAlt

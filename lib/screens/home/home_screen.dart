@@ -64,8 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return BentoDashboardTab(
           onPickFile: () => _pickAndOpenFile(context),
+          onPickFileByType: (type) => _pickAndOpenFile(context, filterType: type),
           onOpenRecent: (f) => _openRecentFile(context, f),
           onShareFile: _shareFile,
+          onOpenExternal: (f) => _openExternalApp(context, f.path),
         );
       case 1:
         return AuroraSettingsTab(
@@ -74,8 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         return BentoDashboardTab(
           onPickFile: () => _pickAndOpenFile(context),
+          onPickFileByType: (type) => _pickAndOpenFile(context, filterType: type),
           onOpenRecent: (f) => _openRecentFile(context, f),
           onShareFile: _shareFile,
+          onOpenExternal: (f) => _openExternalApp(context, f.path),
         );
     }
   }
@@ -84,7 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // File Actions (shared across all tabs)
   // ═══════════════════════════════════════════════════
 
-  Future<void> _pickAndOpenFile(BuildContext context) async {
+  Future<void> _pickAndOpenFile(BuildContext context,
+      {DocumentType? filterType}) async {
     final l = AppLocalizations.of(context)!;
     final hasPermission = await requestStoragePermission();
     if (!hasPermission) {
@@ -103,9 +108,28 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    final List<String> allowedExtensions;
+    switch (filterType) {
+      case DocumentType.spreadsheet:
+        allowedExtensions = ['xlsx', 'xls', 'csv'];
+      case DocumentType.document:
+        allowedExtensions = ['docx', 'doc', 'txt', 'rtf'];
+      case DocumentType.presentation:
+        allowedExtensions = ['pptx', 'ppt'];
+      case DocumentType.pdf:
+        allowedExtensions = ['pdf'];
+      case null:
+        allowedExtensions = [
+          'xlsx', 'xls', 'csv',
+          'docx', 'doc', 'txt', 'rtf',
+          'pptx', 'ppt',
+          'pdf',
+        ];
+    }
+
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['xlsx', 'xls', 'docx', 'doc', 'pptx', 'ppt', 'pdf'],
+      allowedExtensions: allowedExtensions,
     );
 
     if (result == null || result.files.isEmpty) return;
@@ -151,6 +175,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    // 레거시 바이너리 포맷(xls/doc/ppt) — Dart 파서 불가 → 외부 앱 위임
+    if (FileUtils.isLegacyBinaryFormat(filePath)) {
+      if (!context.mounted) return;
+      await _promptOpenExternal(context, filePath);
+      return;
+    }
+
     final recentFile = RecentFile(
       name: pickedFile.name,
       path: filePath,
@@ -177,6 +208,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     if (!context.mounted) return;
+
+    // 레거시 바이너리 포맷 — 외부 앱 위임
+    if (FileUtils.isLegacyBinaryFormat(file.path)) {
+      await _promptOpenExternal(context, file.path);
+      return;
+    }
+
     final updatedFile = file.copyWith(lastOpened: DateTime.now());
     context.read<AppProvider>().addRecentFile(updatedFile);
     _navigateToEditor(context, file.type, file.path);
@@ -194,6 +232,51 @@ class _HomeScreenState extends State<HomeScreen> {
       case DocumentType.pdf:
         Navigator.pushNamed(context, '/pdf', arguments: filePath);
     }
+  }
+
+  /// 레거시 포맷 또는 파싱 실패 시 — "외부 앱으로 열기" 확인 다이얼로그
+  Future<void> _promptOpenExternal(BuildContext context, String filePath) async {
+    final l = AppLocalizations.of(context)!;
+    final ext = FileUtils.getExtensionUpper(filePath);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(l.legacyFormatTitle),
+        content: Text(l.legacyFormatBody(ext)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.openInExternalApp),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await _openExternalApp(context, filePath);
+  }
+
+  Future<void> _openExternalApp(BuildContext context, String filePath) async {
+    final l = AppLocalizations.of(context)!;
+    final error = await FileUtils.openWithExternalApp(filePath);
+    if (!context.mounted || error == null) return;
+    // "No APP found to open this file" 계열 메시지일 때 friendlier 메시지
+    final message = error.toLowerCase().contains('no app')
+        ? l.externalAppError
+        : l.externalAppOpenFailed(error);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   void _shareFile(RecentFile file) async {

@@ -87,6 +87,20 @@
   "newDocument": "New Document",
   "newPresentation": "New Presentation",
   "pdfOpen": "Open PDF",
+  "spreadsheetOpen": "Open Spreadsheet",
+  "homeOpenFile": "Open File",
+  "openInExternalApp": "Open in External App",
+  "legacyFormatTitle": "Legacy File Format",
+  "legacyFormatBody": "{ext} files cannot be opened directly in Excelia. Would you like to open it with an installed office app (Hancom, MS Office, WPS, etc.)?",
+  "@legacyFormatBody": {
+    "placeholders": { "ext": { "type": "String" } }
+  },
+  "externalAppError": "No external app found. Please install an office app.",
+  "externalAppOpenFailed": "Failed to open in external app: {error}",
+  "@externalAppOpenFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "parseFailedOpenExternal": "Could not read the file. Open it with an external app?",
   "subtitleExcelCompat": "Excel compatible",
   "subtitleWordCompat": "Word compatible",
   "subtitlePptCompat": "PPT compatible",

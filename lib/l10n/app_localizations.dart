@@ -566,6 +566,54 @@ abstract class AppLocalizations {
   /// **'PDF 열기'**
   String get pdfOpen;
 
+  /// No description provided for @spreadsheetOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'스프레드시트 열기'**
+  String get spreadsheetOpen;
+
+  /// No description provided for @homeOpenFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 열기'**
+  String get homeOpenFile;
+
+  /// No description provided for @openInExternalApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'외부 앱으로 열기'**
+  String get openInExternalApp;
+
+  /// No description provided for @legacyFormatTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구형 파일 포맷'**
+  String get legacyFormatTitle;
+
+  /// No description provided for @legacyFormatBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{ext} 파일은 Excelia에서 직접 열 수 없습니다. 설치된 오피스 앱(한컴, MS Office, WPS 등)으로 여시겠습니까?'**
+  String legacyFormatBody(String ext);
+
+  /// No description provided for @externalAppError.
+  ///
+  /// In ko, this message translates to:
+  /// **'외부 앱을 찾지 못했습니다. 오피스 앱을 설치해 주세요.'**
+  String get externalAppError;
+
+  /// No description provided for @externalAppOpenFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'외부 앱으로 열기에 실패했습니다: {error}'**
+  String externalAppOpenFailed(String error);
+
+  /// No description provided for @parseFailedOpenExternal.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일을 읽지 못했습니다. 외부 앱으로 열어보시겠습니까?'**
+  String get parseFailedOpenExternal;
+
   /// No description provided for @subtitleExcelCompat.
   ///
   /// In ko, this message translates to:

@@ -1,12 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:excelia/l10n/app_localizations.dart';
 import 'package:excelia/models/app_document.dart';
 import 'package:excelia/utils/constants.dart';
 
 class FileUtils {
   FileUtils._();
+
+  /// 레거시(구형) MS Office 바이너리 포맷 — Dart 파서로 열 수 없어 외부 앱 위임 필요
+  static const Set<String> _legacyBinaryExtensions = {
+    '.xls',   // Excel 97-2003
+    '.doc',   // Word 97-2003
+    '.ppt',   // PowerPoint 97-2003
+  };
+
+  /// 파일 경로의 확장자가 레거시 바이너리 포맷인지 확인
+  static bool isLegacyBinaryFormat(String path) {
+    final lower = path.toLowerCase();
+    final dot = lower.lastIndexOf('.');
+    if (dot < 0) return false;
+    return _legacyBinaryExtensions.contains(lower.substring(dot));
+  }
+
+  /// 파일 경로에서 확장자(점 포함, 대문자) 추출
+  static String getExtensionUpper(String path) {
+    final dot = path.lastIndexOf('.');
+    if (dot < 0) return '';
+    return path.substring(dot).toUpperCase();
+  }
+
+  /// 시스템 기본 앱으로 파일 열기.
+  /// 반환값: 성공 시 null, 실패 시 오류 메시지.
+  static Future<String?> openWithExternalApp(String path) async {
+    try {
+      final result = await OpenFilex.open(path);
+      switch (result.type) {
+        case ResultType.done:
+          return null;
+        case ResultType.noAppToOpen:
+        case ResultType.fileNotFound:
+        case ResultType.permissionDenied:
+        case ResultType.error:
+          return result.message;
+      }
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
   /// 문서 유형에 맞는 아이콘 반환
   static IconData getFileIcon(DocumentType type) {

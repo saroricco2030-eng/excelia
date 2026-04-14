@@ -257,6 +257,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pdfOpen => 'PDF 열기';
 
   @override
+  String get spreadsheetOpen => '스프레드시트 열기';
+
+  @override
+  String get homeOpenFile => '파일 열기';
+
+  @override
+  String get openInExternalApp => '외부 앱으로 열기';
+
+  @override
+  String get legacyFormatTitle => '구형 파일 포맷';
+
+  @override
+  String legacyFormatBody(String ext) {
+    return '$ext 파일은 Excelia에서 직접 열 수 없습니다. 설치된 오피스 앱(한컴, MS Office, WPS 등)으로 여시겠습니까?';
+  }
+
+  @override
+  String get externalAppError => '외부 앱을 찾지 못했습니다. 오피스 앱을 설치해 주세요.';
+
+  @override
+  String externalAppOpenFailed(String error) {
+    return '외부 앱으로 열기에 실패했습니다: $error';
+  }
+
+  @override
+  String get parseFailedOpenExternal => '파일을 읽지 못했습니다. 외부 앱으로 열어보시겠습니까?';
+
+  @override
   String get subtitleExcelCompat => 'Excel 호환';
 
   @override
