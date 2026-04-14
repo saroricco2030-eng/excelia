@@ -74,6 +74,10 @@ dependencies:
   pdfx: ^2.6.0
   lucide_icons: ^0.257.0
 
+  # Visual flourish — "Aurora Glass" (personal-use edition)
+  flutter_animate: ^4.5.2      # declarative animation chaining (.fadeIn().scale().shimmer())
+  animations: ^2.0.11          # Flutter official — OpenContainer / SharedAxisTransition
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
