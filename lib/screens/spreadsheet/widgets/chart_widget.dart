@@ -670,5 +670,6 @@ class _ChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ChartPainter old) => true;
+  bool shouldRepaint(covariant _ChartPainter old) =>
+      !identical(data, old.data);
 }

@@ -1860,4 +1860,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLicensesSubtitle => 'Third-party libraries';
+
+  @override
+  String get commonRestore => 'Undo';
+
+  @override
+  String get commonTryAgain => 'Try again';
+
+  @override
+  String get commonDismiss => 'Dismiss';
+
+  @override
+  String fileDeletedWithUndo(String name) {
+    return 'Deleted \'$name\'';
+  }
+
+  @override
+  String fileDeletedRestored(String name) {
+    return 'Restored \'$name\'';
+  }
+
+  @override
+  String get saveCelebration => 'Saved cleanly';
+
+  @override
+  String get saveCelebrationFirst =>
+      'First save done · Your Excelia journey begins';
+
+  @override
+  String get emptyStateOpenFile => 'Open file';
+
+  @override
+  String get emptyStateTrySample => 'Try a sample';
+
+  @override
+  String get sampleBudgetName => 'Budget Sample';
+
+  @override
+  String get sampleMeetingName => 'Meeting Notes Sample';
+
+  @override
+  String get sampleTodoName => 'Today\'s To-do';
+
+  @override
+  String get sampleCreated => 'Sample files created. Tap to explore.';
+
+  @override
+  String get savedJustNow => 'Saved just now';
+
+  @override
+  String savedSecondsAgo(int seconds) {
+    return 'Saved ${seconds}s ago';
+  }
+
+  @override
+  String a11ySheetTab(String name, int index) {
+    return '$name sheet, position $index';
+  }
+
+  @override
+  String get a11yAddSheet => 'Add sheet';
 }

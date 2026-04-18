@@ -3589,6 +3589,108 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'서드파티 라이브러리'**
   String get settingsLicensesSubtitle;
+
+  /// No description provided for @commonRestore.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리기'**
+  String get commonRestore;
+
+  /// No description provided for @commonTryAgain.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시도'**
+  String get commonTryAgain;
+
+  /// No description provided for @commonDismiss.
+  ///
+  /// In ko, this message translates to:
+  /// **'닫기'**
+  String get commonDismiss;
+
+  /// No description provided for @fileDeletedWithUndo.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\' 삭제됨'**
+  String fileDeletedWithUndo(String name);
+
+  /// No description provided for @fileDeletedRestored.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\' 복원됨'**
+  String fileDeletedRestored(String name);
+
+  /// No description provided for @saveCelebration.
+  ///
+  /// In ko, this message translates to:
+  /// **'깔끔하게 저장됐어요'**
+  String get saveCelebration;
+
+  /// No description provided for @saveCelebrationFirst.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 저장 완료 · Excelia에서 여정이 시작됐어요'**
+  String get saveCelebrationFirst;
+
+  /// No description provided for @emptyStateOpenFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 열기'**
+  String get emptyStateOpenFile;
+
+  /// No description provided for @emptyStateTrySample.
+  ///
+  /// In ko, this message translates to:
+  /// **'샘플 열어보기'**
+  String get emptyStateTrySample;
+
+  /// No description provided for @sampleBudgetName.
+  ///
+  /// In ko, this message translates to:
+  /// **'가계부 샘플'**
+  String get sampleBudgetName;
+
+  /// No description provided for @sampleMeetingName.
+  ///
+  /// In ko, this message translates to:
+  /// **'회의노트 샘플'**
+  String get sampleMeetingName;
+
+  /// No description provided for @sampleTodoName.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 할 일'**
+  String get sampleTodoName;
+
+  /// No description provided for @sampleCreated.
+  ///
+  /// In ko, this message translates to:
+  /// **'샘플 파일을 만들었어요. 바로 탭해보세요.'**
+  String get sampleCreated;
+
+  /// No description provided for @savedJustNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'방금 저장됨'**
+  String get savedJustNow;
+
+  /// No description provided for @savedSecondsAgo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{seconds}초 전 저장됨'**
+  String savedSecondsAgo(int seconds);
+
+  /// No description provided for @a11ySheetTab.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name} 시트, {index}번째'**
+  String a11ySheetTab(String name, int index);
+
+  /// No description provided for @a11yAddSheet.
+  ///
+  /// In ko, this message translates to:
+  /// **'시트 추가'**
+  String get a11yAddSheet;
 }
 
 class _AppLocalizationsDelegate

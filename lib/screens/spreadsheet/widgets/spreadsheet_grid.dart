@@ -592,12 +592,15 @@ class _SpreadsheetGridState extends State<SpreadsheetGrid> {
         width: w,
         height: h,
         initialValue: prov.editValue,
+        // Enter commits and moves down one row (Excel/Sheets parity).
         onSubmit: (v) {
           prov.updateEditValue(v);
           prov.confirmEdit();
+          prov.moveSelection(1, 0);
         },
         onCancel: prov.cancelEdit,
         onChanged: prov.updateEditValue,
+        // Tab commits and moves horizontally (forward=next col, shift=prev).
         onTab: (forward) {
           prov.confirmEdit();
           prov.moveSelection(0, forward ? 1 : -1);

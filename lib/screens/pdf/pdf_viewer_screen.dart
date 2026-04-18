@@ -32,6 +32,10 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   int _currentPage = 1;
   int _totalPages = 0;
 
+  // Title shimmer plays only once per viewer-open — repeated shimmer
+  // fights content hierarchy (Gestalt Figure/Ground).
+  bool _titleShimmerDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -148,16 +152,22 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           ],
         ),
       ),
-      title: Text(
-        _fileName ?? l.pdfViewer,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 17),
-      ).animate(
-        onPlay: (c) => c.repeat(period: const Duration(seconds: 5)),
-      ).shimmer(
-        duration: 1600.ms,
-        color: AppColors.pdfRed.withValues(alpha: 0.55),
-      ),
+      title: () {
+        final base = Text(
+          _fileName ?? l.pdfViewer,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 17),
+        );
+        if (_titleShimmerDone) return base;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _titleShimmerDone = true;
+        });
+        return base.animate().shimmer(
+              delay: 200.ms,
+              duration: 1600.ms,
+              color: AppColors.pdfRed.withValues(alpha: 0.55),
+            );
+      }(),
       actions: [
         if (_filePath != null)
           PopupMenuButton<String>(

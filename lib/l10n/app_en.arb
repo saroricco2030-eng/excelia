@@ -702,5 +702,38 @@
   "settingsResetSubtitle": "Clear recent file history",
   "settingsVersionSubtitle": "Current app version",
   "settingsLicenses": "Open-Source Licenses",
-  "settingsLicensesSubtitle": "Third-party libraries"
+  "settingsLicensesSubtitle": "Third-party libraries",
+
+  "commonRestore": "Undo",
+  "commonTryAgain": "Try again",
+  "commonDismiss": "Dismiss",
+  "fileDeletedWithUndo": "Deleted '{name}'",
+  "@fileDeletedWithUndo": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "fileDeletedRestored": "Restored '{name}'",
+  "@fileDeletedRestored": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "saveCelebration": "Saved cleanly",
+  "saveCelebrationFirst": "First save done · Your Excelia journey begins",
+  "emptyStateOpenFile": "Open file",
+  "emptyStateTrySample": "Try a sample",
+  "sampleBudgetName": "Budget Sample",
+  "sampleMeetingName": "Meeting Notes Sample",
+  "sampleTodoName": "Today's To-do",
+  "sampleCreated": "Sample files created. Tap to explore.",
+  "savedJustNow": "Saved just now",
+  "savedSecondsAgo": "Saved {seconds}s ago",
+  "@savedSecondsAgo": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "a11ySheetTab": "{name} sheet, position {index}",
+  "@a11ySheetTab": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "index": { "type": "int" }
+    }
+  },
+  "a11yAddSheet": "Add sheet"
 }

@@ -290,6 +290,49 @@ class Slide {
 }
 
 // =============================================================================
+// SlideTemplateLabels — localized strings bundle for createNew / applyTemplate /
+// addSlideFromTemplate. Single parameter object replacing 13 optional String
+// args on each method; factory `from(l)` wires up AppLocalizations once at
+// the call site.
+// =============================================================================
+
+class SlideTemplateLabels {
+  final String fileTitle;           // "새 프레젠테이션" / "Untitled Presentation"
+  final String titleSlide;          // "제목 슬라이드" / "Title Slide"
+  final String presentationTitle;   // "프레젠테이션 제목" / "Presentation Title"
+  final String subtitleHint;        // "부제목을 입력하세요" / "Enter subtitle"
+  final String subtitle;            // "부제목" / "Subtitle"
+  final String titleHint;           // "제목을 입력하세요" / "Enter title"
+  final String titleBody;           // "제목 + 본문" / "Title + Body"
+  final String bodyHint;            // "본문 내용을 입력하세요" / "Enter body text"
+  final String twoColumn;           // "2단 비교" / "Two Column"
+  final String comparisonTitle;     // "비교 제목" / "Comparison Title"
+  final String leftContent;         // "왼쪽 내용" / "Left Content"
+  final String rightContent;        // "오른쪽 내용" / "Right Content"
+  final String sectionBreak;        // "섹션 구분" / "Section Break"
+  final String sectionTitle;        // "섹션 제목" / "Section Title"
+  final String Function(int index) slideNumbered; // "슬라이드 {n}" / "Slide {n}"
+
+  const SlideTemplateLabels({
+    required this.fileTitle,
+    required this.titleSlide,
+    required this.presentationTitle,
+    required this.subtitleHint,
+    required this.subtitle,
+    required this.titleHint,
+    required this.titleBody,
+    required this.bodyHint,
+    required this.twoColumn,
+    required this.comparisonTitle,
+    required this.leftContent,
+    required this.rightContent,
+    required this.sectionBreak,
+    required this.sectionTitle,
+    required this.slideNumbered,
+  });
+}
+
+// =============================================================================
 // PresentationProvider
 // =============================================================================
 
@@ -407,15 +450,10 @@ class PresentationProvider extends ChangeNotifier {
   // Lifecycle
   // ---------------------------------------------------------------------------
 
-  void createNew({
-    String? defaultTitle,
-    String? titleSlideLabel,
-    String? presentationTitleText,
-    String? subtitleHint,
-  }) {
+  void createNew({SlideTemplateLabels? labels}) {
     _slides = [
       Slide(
-        title: titleSlideLabel ?? 'Title Slide',
+        title: labels?.titleSlide ?? 'Title Slide',
         elements: [
           SlideElement(
             type: SlideElementType.text,
@@ -423,11 +461,11 @@ class PresentationProvider extends ChangeNotifier {
             y: 120,
             width: 800,
             height: 80,
-            content: presentationTitleText ?? 'Presentation Title',
+            content: labels?.presentationTitle ?? 'Presentation Title',
             fontSize: 44,
             fontWeight: FontWeight.bold,
             textAlign: TextAlign.center,
-            color: const Color(0xFF333333),
+            color: AppColors.slideTitleText,
           ),
           SlideElement(
             type: SlideElementType.text,
@@ -435,7 +473,7 @@ class PresentationProvider extends ChangeNotifier {
             y: 240,
             width: 560,
             height: 48,
-            content: subtitleHint ?? 'Enter subtitle',
+            content: labels?.subtitleHint ?? 'Enter subtitle',
             fontSize: 22,
             color: AppColors.grey500,
             textAlign: TextAlign.center,
@@ -444,7 +482,7 @@ class PresentationProvider extends ChangeNotifier {
       ),
     ];
     _currentIndex = 0;
-    _title = defaultTitle ?? 'Untitled Presentation';
+    _title = labels?.fileTitle ?? 'Untitled Presentation';
     _filePath = null;
     _isDirty = false;
     _selectedElementId = null;
@@ -469,7 +507,7 @@ class PresentationProvider extends ChangeNotifier {
           content: titleHint ?? 'Enter title',
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: const Color(0xFF333333),
+          color: AppColors.slideTitleText,
         ),
       ],
     );
@@ -772,50 +810,36 @@ class PresentationProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   /// Apply a template to the first slide (for template gallery launch).
-  void applyTemplate(String templateType) {
+  void applyTemplate(String templateType, {SlideTemplateLabels? labels}) {
     if (templateType == 'blank') return;
     // Remove default blank slide and add template slide
     if (_slides.isNotEmpty) {
       _slides.removeAt(0);
     }
-    addSlideFromTemplate(templateType);
+    addSlideFromTemplate(templateType, labels: labels);
     _currentIndex = 0;
     notifyListeners();
   }
 
-  void addSlideFromTemplate(String templateType, {
-    String? titleSlideLabel,
-    String? presentationTitleText,
-    String? subtitleText,
-    String? titleHint,
-    String? titleBodyLabel,
-    String? bodyHint,
-    String? twoColumnLabel,
-    String? comparisonTitle,
-    String? leftContent,
-    String? rightContent,
-    String? sectionBreakLabel,
-    String? sectionTitleText,
-    String? defaultSlideLabel,
-  }) {
+  void addSlideFromTemplate(String templateType, {SlideTemplateLabels? labels}) {
     Slide slide;
     switch (templateType) {
       case 'title':
         slide = Slide(
-          title: titleSlideLabel ?? 'Title Slide',
+          title: labels?.titleSlide ?? 'Title Slide',
           elements: [
             SlideElement(
               type: SlideElementType.text,
               x: 80, y: 150, width: 800, height: 80,
-              content: presentationTitleText ?? 'Presentation Title',
+              content: labels?.presentationTitle ?? 'Presentation Title',
               fontSize: 44, fontWeight: FontWeight.bold,
               textAlign: TextAlign.center,
-              color: const Color(0xFF333333),
+              color: AppColors.slideTitleText,
             ),
             SlideElement(
               type: SlideElementType.text,
               x: 200, y: 260, width: 560, height: 48,
-              content: subtitleText ?? 'Subtitle',
+              content: labels?.subtitle ?? 'Subtitle',
               fontSize: 22, color: AppColors.grey500,
               textAlign: TextAlign.center,
             ),
@@ -823,58 +847,58 @@ class PresentationProvider extends ChangeNotifier {
         );
       case 'titleBody':
         slide = Slide(
-          title: titleBodyLabel ?? 'Title + Body',
+          title: labels?.titleBody ?? 'Title + Body',
           elements: [
             SlideElement(
               type: SlideElementType.text,
               x: 60, y: 30, width: 840, height: 60,
-              content: titleHint ?? 'Enter title',
+              content: labels?.titleHint ?? 'Enter title',
               fontSize: 32, fontWeight: FontWeight.bold,
-              color: const Color(0xFF333333),
+              color: AppColors.slideTitleText,
             ),
             SlideElement(
               type: SlideElementType.text,
               x: 60, y: 110, width: 840, height: 380,
-              content: bodyHint ?? 'Enter body text',
-              fontSize: 18, color: const Color(0xFF666666),
+              content: labels?.bodyHint ?? 'Enter body text',
+              fontSize: 18, color: AppColors.slideSubtitleText,
             ),
           ],
         );
       case 'twoColumn':
         slide = Slide(
-          title: twoColumnLabel ?? 'Two Column',
+          title: labels?.twoColumn ?? 'Two Column',
           elements: [
             SlideElement(
               type: SlideElementType.text,
               x: 60, y: 30, width: 840, height: 60,
-              content: comparisonTitle ?? 'Comparison Title',
+              content: labels?.comparisonTitle ?? 'Comparison Title',
               fontSize: 32, fontWeight: FontWeight.bold,
               textAlign: TextAlign.center,
-              color: const Color(0xFF333333),
+              color: AppColors.slideTitleText,
             ),
             SlideElement(
               type: SlideElementType.text,
               x: 40, y: 110, width: 420, height: 380,
-              content: leftContent ?? 'Left Content',
-              fontSize: 18, color: const Color(0xFF666666),
+              content: labels?.leftContent ?? 'Left Content',
+              fontSize: 18, color: AppColors.slideSubtitleText,
             ),
             SlideElement(
               type: SlideElementType.text,
               x: 500, y: 110, width: 420, height: 380,
-              content: rightContent ?? 'Right Content',
-              fontSize: 18, color: const Color(0xFF666666),
+              content: labels?.rightContent ?? 'Right Content',
+              fontSize: 18, color: AppColors.slideSubtitleText,
             ),
           ],
         );
       case 'section':
         slide = Slide(
-          title: sectionBreakLabel ?? 'Section Break',
-          backgroundColor: const Color(0xFF2C3E50),
+          title: labels?.sectionBreak ?? 'Section Break',
+          backgroundColor: AppColors.slideSectionBg,
           elements: [
             SlideElement(
               type: SlideElementType.text,
               x: 80, y: 200, width: 800, height: 80,
-              content: sectionTitleText ?? 'Section Title',
+              content: labels?.sectionTitle ?? 'Section Title',
               fontSize: 40, fontWeight: FontWeight.bold,
               textAlign: TextAlign.center,
               color: AppColors.white,
@@ -882,7 +906,10 @@ class PresentationProvider extends ChangeNotifier {
           ],
         );
       default:
-        slide = Slide(title: defaultSlideLabel ?? 'Slide ${_slides.length + 1}');
+        final nextIndex = _slides.length + 1;
+        slide = Slide(
+          title: labels?.slideNumbered(nextIndex) ?? 'Slide $nextIndex',
+        );
     }
     _slides.add(slide);
     _currentIndex = _slides.length - 1;

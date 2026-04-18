@@ -46,6 +46,13 @@ class _PresentationScreenState extends State<PresentationScreen> {
   PresentationProvider? _presProvider;
   final FocusNode _keyboardFocusNode = FocusNode();
 
+  // Title shimmer plays only once per editor-open — repeated shimmer
+  // fights content hierarchy (Gestalt Figure/Ground).
+  bool _titleShimmerDone = false;
+
+  // Transient save-success pulse on the save icon.
+  int _savePulseKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -55,11 +62,16 @@ class _PresentationScreenState extends State<PresentationScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = _presProvider!;
+      if (!mounted) return;
+      final l = AppLocalizations.of(context)!;
+      final labels = _labelsFrom(l);
       final arg = ModalRoute.of(context)?.settings.arguments as String?;
       if (arg != null && arg.startsWith('template:')) {
-        provider.createNew();
-        final templateType = arg.substring('template:'.length);
-        provider.applyTemplate(templateType);
+        provider.createNew(labels: labels);
+        provider.applyTemplate(
+          arg.substring('template:'.length),
+          labels: labels,
+        );
         _titleController.text = provider.title;
       } else if (arg != null) {
         try {
@@ -67,7 +79,6 @@ class _PresentationScreenState extends State<PresentationScreen> {
           _titleController.text = provider.title;
         } catch (e) {
           if (!mounted) return;
-          final l = AppLocalizations.of(context)!;
           showExceliaSnackBar(context,
             message: l.presentationOpenError(e.toString()),
             isError: true,
@@ -83,15 +94,35 @@ class _PresentationScreenState extends State<PresentationScreen> {
               }
             },
           );
-          provider.createNew();
+          provider.createNew(labels: labels);
           _titleController.text = provider.title;
         }
       } else {
-        provider.createNew();
+        provider.createNew(labels: labels);
         _titleController.text = provider.title;
       }
     });
   }
+
+  /// AppLocalizations → SlideTemplateLabels 번들.
+  /// createNew / applyTemplate / addSlideFromTemplate 호출 시 공통 사용.
+  SlideTemplateLabels _labelsFrom(AppLocalizations l) => SlideTemplateLabels(
+        fileTitle: l.newPresentation,
+        titleSlide: l.slideTitleSlide,
+        presentationTitle: l.slidePresentationTitle,
+        subtitleHint: l.slideSubtitleHint,
+        subtitle: l.slideSubtitle,
+        titleHint: l.slideTitleHint,
+        titleBody: l.slideTitleBody,
+        bodyHint: l.slideBodyHint,
+        twoColumn: l.slideTwoColumn,
+        comparisonTitle: l.slideComparisonTitle,
+        leftContent: l.slideLeftContent,
+        rightContent: l.slideRightContent,
+        sectionBreak: l.slideSectionBreak,
+        sectionTitle: l.slideSectionTitle,
+        slideNumbered: l.slideNumbered,
+      );
 
   void _onProviderChanged() {
     _scheduleAutoSave();
@@ -300,19 +331,23 @@ class _PresentationScreenState extends State<PresentationScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Flexible(
-                      child: Text(provider.title,
+                      child: () {
+                        final base = Text(
+                          provider.title,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 18))
-                          .animate(
-                            onPlay: (c) => c.repeat(
-                              period: const Duration(seconds: 5),
-                            ),
-                          )
-                          .shimmer(
-                            duration: 1600.ms,
-                            color: AppColors.presentationOrange
-                                .withValues(alpha: 0.55),
-                          ),
+                          style: const TextStyle(fontSize: 18),
+                        );
+                        if (_titleShimmerDone) return base;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _titleShimmerDone = true;
+                        });
+                        return base.animate().shimmer(
+                              delay: 200.ms,
+                              duration: 1600.ms,
+                              color: AppColors.presentationOrange
+                                  .withValues(alpha: 0.55),
+                            );
+                      }(),
                     ),
                     if (provider.isDirty) ...[
                       const SizedBox(width: 6),
@@ -333,7 +368,21 @@ class _PresentationScreenState extends State<PresentationScreen> {
             ),
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.save),
+          icon: Icon(LucideIcons.save)
+              .animate(key: ValueKey(_savePulseKey))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.25, 1.25),
+                duration: 160.ms,
+                curve: Curves.easeOutCubic,
+              )
+              .then()
+              .scale(
+                begin: const Offset(1.25, 1.25),
+                end: const Offset(1, 1),
+                duration: 260.ms,
+                curve: Curves.easeOutBack,
+              ),
           onPressed: () => _save(provider),
           tooltip: l.commonSave,
         ),
@@ -1578,15 +1627,25 @@ class _PresentationScreenState extends State<PresentationScreen> {
         if (path == null) return;
       }
       await provider.saveToFile(path);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.presentationSaved)),
-        );
-      }
+      if (!mounted) return;
+      final appProv = context.read<AppProvider>();
+      final isFirst = !appProv.hasSavedFirstFile;
+      await appProv.markFirstSave();
+      if (!mounted) return;
+      setState(() => _savePulseKey++);
+      showExceliaSnackBar(
+        context,
+        message: isFirst ? l.saveCelebrationFirst : l.saveCelebration,
+        haptic: HapticLevel.light,
+        isSuccess: true,
+        leadingIcon: LucideIcons.checkCircle2,
+      );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.presentationSaveError(e.toString()))),
+        showExceliaSnackBar(
+          context,
+          message: l.presentationSaveError(e.toString()),
+          isError: true,
         );
       }
     }
@@ -1616,7 +1675,7 @@ class _PresentationScreenState extends State<PresentationScreen> {
           await provider.loadFromFile(result.files.single.path!);
         }
       case 'new':
-        provider.createNew();
+        provider.createNew(labels: _labelsFrom(l));
       case 'grid':
         provider.toggleGridSnap();
       case 'toggleSlides':
@@ -1890,7 +1949,10 @@ class _PresentationScreenState extends State<PresentationScreen> {
                     return InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                        provider.addSlideFromTemplate(t.$1);
+                        provider.addSlideFromTemplate(
+                          t.$1,
+                          labels: _labelsFrom(sl),
+                        );
                         Navigator.pop(ctx);
                       },
                       child: Container(

@@ -43,6 +43,13 @@ class _DocumentScreenState extends State<DocumentScreen> {
   final TextEditingController _replaceCtrl = TextEditingController();
   Timer? _autoSaveTimer;
 
+  // Title shimmer plays only once per editor-open — repeated shimmer
+  // fights content hierarchy (Gestalt Figure/Ground).
+  bool _titleShimmerDone = false;
+
+  // Transient save-success pulse on the save icon.
+  int _savePulseKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -57,17 +64,18 @@ class _DocumentScreenState extends State<DocumentScreen> {
     // Always call createNew() for the no-file case so stale state from a
     // previous visit is cleared.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final l = AppLocalizations.of(context)!;
       final arg = ModalRoute.of(context)?.settings.arguments as String?;
       if (arg != null && arg.startsWith('template:')) {
         final templateType = arg.substring('template:'.length);
-        _provider.createNew();
+        _provider.createNew(defaultTitle: l.newDocument);
         _provider.createFromTemplate(templateType);
       } else if (arg != null) {
         try {
           await _provider.loadFromFile(arg);
         } catch (e) {
           if (!mounted) return;
-          final l = AppLocalizations.of(context)!;
           showExceliaSnackBar(context,
             message: l.documentOpenError(e.toString()),
             isError: true,
@@ -83,10 +91,10 @@ class _DocumentScreenState extends State<DocumentScreen> {
               }
             },
           );
-          _provider.createNew();
+          _provider.createNew(defaultTitle: l.newDocument);
         }
       } else {
-        _provider.createNew();
+        _provider.createNew(defaultTitle: l.newDocument);
       }
     });
   }
@@ -238,18 +246,23 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Flexible(
-                    child: Text(
-                      provider.title,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 18),
-                    ).animate(
-                      onPlay: (c) => c.repeat(
-                        period: const Duration(seconds: 5),
-                      ),
-                    ).shimmer(
-                      duration: 1600.ms,
-                      color: AppColors.documentBlue.withValues(alpha: 0.55),
-                    ),
+                    child: () {
+                      final base = Text(
+                        provider.title,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 18),
+                      );
+                      if (_titleShimmerDone) return base;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _titleShimmerDone = true;
+                      });
+                      return base.animate().shimmer(
+                            delay: 200.ms,
+                            duration: 1600.ms,
+                            color: AppColors.documentBlue
+                                .withValues(alpha: 0.55),
+                          );
+                    }(),
                   ),
                   if (provider.isDirty) ...[
                     const SizedBox(width: 6),
@@ -270,7 +283,21 @@ class _DocumentScreenState extends State<DocumentScreen> {
             ),
       actions: [
         IconButton(
-          icon: const Icon(LucideIcons.save),
+          icon: Icon(LucideIcons.save)
+              .animate(key: ValueKey(_savePulseKey))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.25, 1.25),
+                duration: 160.ms,
+                curve: Curves.easeOutCubic,
+              )
+              .then()
+              .scale(
+                begin: const Offset(1.25, 1.25),
+                end: const Offset(1, 1),
+                duration: 260.ms,
+                curve: Curves.easeOutBack,
+              ),
           onPressed: provider.isSaving ? null : () => _save(provider),
           tooltip: l.commonSave,
         ),
@@ -785,9 +812,19 @@ class _DocumentScreenState extends State<DocumentScreen> {
         if (path == null) return;
       }
       await provider.saveToFile(path);
-      if (mounted) {
-        showExceliaSnackBar(context, message: l.documentSaved);
-      }
+      if (!mounted) return;
+      final appProv = context.read<AppProvider>();
+      final isFirst = !appProv.hasSavedFirstFile;
+      await appProv.markFirstSave();
+      if (!mounted) return;
+      setState(() => _savePulseKey++);
+      showExceliaSnackBar(
+        context,
+        message: isFirst ? l.saveCelebrationFirst : l.saveCelebration,
+        haptic: HapticLevel.light,
+        isSuccess: true,
+        leadingIcon: LucideIcons.checkCircle2,
+      );
     } catch (e) {
       if (mounted) {
         showExceliaSnackBar(context,
@@ -952,7 +989,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
           );
           if (confirm != true) return;
         }
-        provider.createNew();
+        provider.createNew(defaultTitle: l.newDocument);
       case 'shortcuts':
         showKeyboardShortcutsDialog(context, 'document');
     }

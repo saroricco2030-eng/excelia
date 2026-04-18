@@ -10,20 +10,32 @@ class AppProvider extends ChangeNotifier {
   AppDocument? _currentDocument;
   ThemeMode _themeMode = ThemeMode.system;
   bool _autoSaveEnabled = true;
+  bool _hasLaunchedBefore = false;
+  bool _hasSavedFirstFile = false;
+
+  /// Soft-deleted files within the Undo window. Key = filePath.
+  final Map<String, _PendingDelete> _pendingDeletes = {};
 
   static const String _recentFilesKey = 'recent_files';
   static const String _themeModeKey = 'theme_mode';
   static const String _autoSaveKey = 'auto_save_enabled';
+  static const String _firstLaunchKey = 'has_launched_before';
+  static const String _firstSaveKey = 'has_saved_first_file';
 
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
 
-  List<RecentFile> get recentFiles => List.unmodifiable(_recentFiles);
+  /// Visible recent files — excludes soft-deleted.
+  List<RecentFile> get recentFiles => List.unmodifiable(
+        _recentFiles.where((f) => !_pendingDeletes.containsKey(f.path)),
+      );
   AppDocument? get currentDocument => _currentDocument;
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
   bool get autoSaveEnabled => _autoSaveEnabled;
+  bool get hasLaunchedBefore => _hasLaunchedBefore;
+  bool get hasSavedFirstFile => _hasSavedFirstFile;
 
   // ---------------------------------------------------------------------------
   // Current document
@@ -92,6 +104,42 @@ class AppProvider extends ChangeNotifier {
     _saveRecentFiles();
   }
 
+  /// Soft-delete: hide from UI but retain for Undo within the window.
+  /// Returns the removed file (null if not found) so the caller can surface
+  /// a SnackBar with the file name.
+  RecentFile? softRemoveRecentFile(String filePath,
+      {Duration window = const Duration(seconds: 6)}) {
+    final index = _recentFiles.indexWhere((f) => f.path == filePath);
+    if (index < 0) return null;
+    final file = _recentFiles[index];
+    _pendingDeletes[filePath] = _PendingDelete(
+      file: file,
+      originalIndex: index,
+      expiresAt: DateTime.now().add(window),
+    );
+    notifyListeners();
+    // Commit once the window expires (if still pending).
+    Future.delayed(window, () => _commitPendingDelete(filePath));
+    return file;
+  }
+
+  /// Restore a soft-deleted file if the Undo window has not expired.
+  bool undoRemoveRecentFile(String filePath) {
+    final pending = _pendingDeletes.remove(filePath);
+    if (pending == null) return false;
+    notifyListeners();
+    return true;
+  }
+
+  void _commitPendingDelete(String filePath) {
+    final pending = _pendingDeletes[filePath];
+    if (pending == null) return;
+    _pendingDeletes.remove(filePath);
+    _recentFiles.removeWhere((f) => f.path == filePath);
+    notifyListeners();
+    _saveRecentFiles();
+  }
+
   void clearRecentFiles() {
     _recentFiles.clear();
     notifyListeners();
@@ -119,6 +167,10 @@ class AppProvider extends ChangeNotifier {
     // 자동 저장 설정 복원
     _autoSaveEnabled = prefs.getBool(_autoSaveKey) ?? true;
 
+    // First-run / first-save flags
+    _hasLaunchedBefore = prefs.getBool(_firstLaunchKey) ?? false;
+    _hasSavedFirstFile = prefs.getBool(_firstSaveKey) ?? false;
+
     // 최근 파일 복원
     final jsonString = prefs.getString(_recentFilesKey);
     if (jsonString != null) {
@@ -136,6 +188,24 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Mark first launch as completed (called after showing onboarding / sample).
+  Future<void> markLaunched() async {
+    if (_hasLaunchedBefore) return;
+    _hasLaunchedBefore = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_firstLaunchKey, true);
+  }
+
+  /// Mark first save as completed (used to show celebration banner once).
+  Future<void> markFirstSave() async {
+    if (_hasSavedFirstFile) return;
+    _hasSavedFirstFile = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_firstSaveKey, true);
+  }
+
   Future<void> _saveRecentFiles() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = jsonEncode(
@@ -148,4 +218,16 @@ class AppProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_themeModeKey, _themeMode.index);
   }
+}
+
+class _PendingDelete {
+  final RecentFile file;
+  final int originalIndex;
+  final DateTime expiresAt;
+
+  _PendingDelete({
+    required this.file,
+    required this.originalIndex,
+    required this.expiresAt,
+  });
 }

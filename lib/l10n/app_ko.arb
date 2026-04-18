@@ -771,5 +771,38 @@
   "settingsResetSubtitle": "최근 파일 기록 삭제",
   "settingsVersionSubtitle": "현재 앱 버전",
   "settingsLicenses": "오픈소스 라이선스",
-  "settingsLicensesSubtitle": "서드파티 라이브러리"
+  "settingsLicensesSubtitle": "서드파티 라이브러리",
+
+  "commonRestore": "되돌리기",
+  "commonTryAgain": "다시 시도",
+  "commonDismiss": "닫기",
+  "fileDeletedWithUndo": "'{name}' 삭제됨",
+  "@fileDeletedWithUndo": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "fileDeletedRestored": "'{name}' 복원됨",
+  "@fileDeletedRestored": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "saveCelebration": "깔끔하게 저장됐어요",
+  "saveCelebrationFirst": "첫 저장 완료 · Excelia에서 여정이 시작됐어요",
+  "emptyStateOpenFile": "파일 열기",
+  "emptyStateTrySample": "샘플 열어보기",
+  "sampleBudgetName": "가계부 샘플",
+  "sampleMeetingName": "회의노트 샘플",
+  "sampleTodoName": "오늘 할 일",
+  "sampleCreated": "샘플 파일을 만들었어요. 바로 탭해보세요.",
+  "savedJustNow": "방금 저장됨",
+  "savedSecondsAgo": "{seconds}초 전 저장됨",
+  "@savedSecondsAgo": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "a11ySheetTab": "{name} 시트, {index}번째",
+  "@a11ySheetTab": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "index": { "type": "int" }
+    }
+  },
+  "a11yAddSheet": "시트 추가"
 }

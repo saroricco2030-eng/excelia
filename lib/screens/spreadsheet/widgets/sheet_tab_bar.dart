@@ -34,6 +34,7 @@ class _SheetTabBarState extends State<SheetTabBar> {
     return Consumer<SpreadsheetProvider>(
       builder: (context, prov, _) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
+        final l = AppLocalizations.of(context)!;
         return Container(
           height: 44,
           decoration: BoxDecoration(
@@ -48,7 +49,7 @@ class _SheetTabBarState extends State<SheetTabBar> {
           child: Row(
             children: [
               // 시트 추가 버튼
-              _buildAddButton(prov),
+              _buildAddButton(prov, l),
               VerticalDivider(width: 1,
                   color: isDark ? AppColors.darkOutline : AppColors.grey300),
               // 드래그로 순서 변경 가능한 시트 탭들
@@ -67,7 +68,12 @@ class _SheetTabBarState extends State<SheetTabBar> {
                   itemBuilder: (_, i) => ReorderableDragStartListener(
                     key: ValueKey(prov.sheetNames[i]),
                     index: i,
-                    child: _buildTab(prov.sheetNames[i], prov, isDark),
+                    child: Semantics(
+                      label: l.a11ySheetTab(prov.sheetNames[i], i + 1),
+                      button: true,
+                      selected: prov.sheetNames[i] == prov.currentSheetName,
+                      child: _buildTab(prov.sheetNames[i], prov, isDark),
+                    ),
                   ),
                 ),
               ),
@@ -78,16 +84,20 @@ class _SheetTabBarState extends State<SheetTabBar> {
     );
   }
 
-  Widget _buildAddButton(SpreadsheetProvider prov) {
+  Widget _buildAddButton(SpreadsheetProvider prov, AppLocalizations l) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: () => _showAddSheetDialog(prov),
-      child: Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        child: Icon(LucideIcons.plus, size: 18,
-            color: isDark ? AppColors.darkOnSurfaceAlt : AppColors.grey600),
+    return Semantics(
+      label: l.a11yAddSheet,
+      button: true,
+      child: InkWell(
+        onTap: () => _showAddSheetDialog(prov),
+        child: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          child: Icon(LucideIcons.plus, size: 18,
+              color: isDark ? AppColors.darkOnSurfaceAlt : AppColors.grey600),
+        ),
       ),
     );
   }

@@ -31,6 +31,23 @@ class FileUtils {
     return path.substring(dot).toUpperCase();
   }
 
+  /// 파일 경로에서 확장자(점 없이, 소문자) 추출.
+  /// `getDocumentTypeFromExtension`과 짝을 이룸.
+  static String getExtensionLower(String path) {
+    final dot = path.lastIndexOf('.');
+    if (dot < 0 || dot == path.length - 1) return '';
+    return path.substring(dot + 1).toLowerCase();
+  }
+
+  /// 플랫폼 구분자 유무에 관계없이 경로의 파일명만 추출.
+  /// Android cache 경로는 `/`를, Windows 경로는 `\`를 쓰므로 둘 다 처리.
+  static String basename(String path) {
+    final slash = path.lastIndexOf('/');
+    final backslash = path.lastIndexOf('\\');
+    final idx = slash > backslash ? slash : backslash;
+    return idx < 0 ? path : path.substring(idx + 1);
+  }
+
   /// 시스템 기본 앱으로 파일 열기.
   /// 반환값: 성공 시 null, 실패 시 오류 메시지.
   static Future<String?> openWithExternalApp(String path) async {
@@ -50,17 +67,19 @@ class FileUtils {
     }
   }
 
-  /// 문서 유형에 맞는 아이콘 반환
+  /// 문서 유형에 맞는 아이콘 반환.
+  /// 타입별로 서로 다른 실루엣을 사용 — 색상만이 아니라 형태로도 구분 가능해야 함
+  /// (컬러 블라인드 접근성 / Don Norman Signifier 원칙).
   static IconData getFileIcon(DocumentType type) {
     switch (type) {
       case DocumentType.spreadsheet:
-        return LucideIcons.table;
+        return LucideIcons.table;                // 격자 실루엣
       case DocumentType.document:
-        return LucideIcons.fileText;
+        return LucideIcons.fileText;             // 텍스트 라인 문서
       case DocumentType.presentation:
-        return LucideIcons.presentation;
+        return LucideIcons.presentation;         // 프레젠테이션 스크린
       case DocumentType.pdf:
-        return LucideIcons.fileText;
+        return LucideIcons.fileType2;            // PDF 전용 형태
     }
   }
 

@@ -45,6 +45,14 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
   Timer? _autoSaveTimer;
   SpreadsheetProvider? _spreadsheetProvider;
 
+  // Title shimmer plays only once per editor-open — repeated shimmer
+  // fights content hierarchy (Gestalt Figure/Ground).
+  bool _titleShimmerDone = false;
+
+  // Transient save-success pulse on the save icon — drives a one-off
+  // scale bounce that settles back without leaving a permanent effect.
+  int _savePulseKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +60,11 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
     _spreadsheetProvider!.addListener(_onProviderChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prov = _spreadsheetProvider!;
+      if (!mounted) return;
+      final l = AppLocalizations.of(context)!;
       final arg = ModalRoute.of(context)?.settings.arguments as String?;
       if (arg != null && arg.startsWith('template:')) {
-        prov.createNew();
+        prov.createNew(defaultName: l.newSpreadsheet);
         prov.createFromTemplate(arg.substring('template:'.length));
       } else if (arg != null && arg.isNotEmpty) {
         final ok = await prov.loadFile(File(arg));
@@ -80,7 +90,7 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           );
         }
       } else {
-        prov.createNew();
+        prov.createNew(defaultName: l.newSpreadsheet);
       }
     });
   }
@@ -246,38 +256,66 @@ class _SpreadsheetScreenState extends State<SpreadsheetScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
-              child:
-                  Text(
-                        prov.fileName + (prov.isModified ? ' *' : ''),
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      )
-                      .animate(
-                        onPlay: (c) =>
-                            c.repeat(period: const Duration(seconds: 5)),
-                      )
-                      .shimmer(
-                        duration: 1600.ms,
-                        color: AppColors.spreadsheetGreen.withValues(
-                          alpha: 0.55,
-                        ),
-                      ),
+              child: () {
+                final base = Text(
+                  prov.fileName + (prov.isModified ? ' *' : ''),
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
+                if (_titleShimmerDone) return base;
+                // One-shot title shimmer on first build — avoid repeated
+                // shimmer that fights actual content hierarchy.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _titleShimmerDone = true;
+                });
+                return base.animate().shimmer(
+                      delay: 200.ms,
+                      duration: 1600.ms,
+                      color: AppColors.spreadsheetGreen
+                          .withValues(alpha: 0.55),
+                    );
+              }(),
             ),
           ],
         ),
       ),
       actions: [
-        // 저장
+        // 저장 — 성공 시 아이콘 펄스 + 라이트 햅틱 + Celebration 메시지
         IconButton(
-          icon: const Icon(LucideIcons.save, size: 20),
+          icon: Icon(LucideIcons.save, size: 20)
+              .animate(key: ValueKey(_savePulseKey))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.25, 1.25),
+                duration: 160.ms,
+                curve: Curves.easeOutCubic,
+              )
+              .then()
+              .scale(
+                begin: const Offset(1.25, 1.25),
+                end: const Offset(1, 1),
+                duration: 260.ms,
+                curve: Curves.easeOutBack,
+              ),
           tooltip: l.commonSave,
           onPressed: () async {
             final path = await prov.saveFile();
             if (path != null && mounted) {
-              showExceliaSnackBar(context, message: l.fileSaved);
+              final appProv = context.read<AppProvider>();
+              final isFirst = !appProv.hasSavedFirstFile;
+              await appProv.markFirstSave();
+              if (!mounted) return;
+              setState(() => _savePulseKey++);
+              showExceliaSnackBar(
+                context,
+                message: isFirst ? l.saveCelebrationFirst : l.saveCelebration,
+                haptic: HapticLevel.light,
+                isSuccess: true,
+                leadingIcon: LucideIcons.checkCircle2,
+              );
             }
           },
         ),

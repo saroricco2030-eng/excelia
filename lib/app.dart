@@ -34,6 +34,19 @@ class ExceliaApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: appProvider.themeMode,
+            // Clamp text scale to prevent layout overflow at extreme sizes
+            // while still honoring user's system preference up to 130%.
+            builder: (context, child) {
+              final mq = MediaQuery.of(context);
+              final scaler = mq.textScaler.clamp(
+                minScaleFactor: 1.0,
+                maxScaleFactor: 1.3,
+              );
+              return MediaQuery(
+                data: mq.copyWith(textScaler: scaler),
+                child: child ?? const SizedBox.shrink(),
+              );
+            },
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,

@@ -13,7 +13,7 @@
 
     <application
         android:requestLegacyExternalStorage="true"
-        android:label="excelia"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -36,6 +36,81 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- ─────────────────────────────────────────────────────────────
+                 파일 매니저(Samsung My Files / Google Files 등)에서 VIEW intent
+                 로 파일을 열 때 "앱 선택" 다이얼로그에 Excelia 노출.
+
+                 2개의 intent-filter로 구성:
+                 1) MIME 기반 — 대부분의 파일 매니저가 이 경로로 진입
+                 2) 확장자 기반 (pathPattern) — MIME이 모호할 때 (*/*,
+                    application/octet-stream) 폴백
+                 ───────────────────────────────────────────────────────────── -->
+
+            <!-- ① MIME 기반 — 파일 매니저가 정확한 MIME을 붙여줄 때 -->
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <!-- 스프레드시트 -->
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+                <data android:mimeType="application/vnd.ms-excel"/>
+                <data android:mimeType="text/csv"/>
+                <data android:mimeType="text/comma-separated-values"/>
+                <!-- 문서 -->
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+                <data android:mimeType="application/msword"/>
+                <data android:mimeType="text/plain"/>
+                <data android:mimeType="application/rtf"/>
+                <data android:mimeType="text/rtf"/>
+                <!-- 프레젠테이션 -->
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
+                <data android:mimeType="application/vnd.ms-powerpoint"/>
+                <!-- PDF -->
+                <data android:mimeType="application/pdf"/>
+            </intent-filter>
+
+            <!-- ② 확장자 기반 — MIME이 모호(`*/*` / `application/octet-stream`)할 때 폴백
+                 pathPattern은 file:// scheme에서 가장 잘 작동. 일부 파일 매니저
+                 (특히 Samsung My Files 구버전)는 MIME을 */*로 넘김. -->
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="file"/>
+                <data android:scheme="content"/>
+                <data android:mimeType="*/*"/>
+                <!-- 스프레드시트 -->
+                <data android:pathPattern=".*\\.xlsx"/>
+                <data android:pathPattern=".*\\..*\\.xlsx"/>
+                <data android:pathPattern=".*\\..*\\..*\\.xlsx"/>
+                <data android:pathPattern=".*\\.xls"/>
+                <data android:pathPattern=".*\\..*\\.xls"/>
+                <data android:pathPattern=".*\\.csv"/>
+                <data android:pathPattern=".*\\..*\\.csv"/>
+                <!-- 문서 -->
+                <data android:pathPattern=".*\\.docx"/>
+                <data android:pathPattern=".*\\..*\\.docx"/>
+                <data android:pathPattern=".*\\..*\\..*\\.docx"/>
+                <data android:pathPattern=".*\\.doc"/>
+                <data android:pathPattern=".*\\..*\\.doc"/>
+                <data android:pathPattern=".*\\.txt"/>
+                <data android:pathPattern=".*\\..*\\.txt"/>
+                <data android:pathPattern=".*\\.rtf"/>
+                <data android:pathPattern=".*\\..*\\.rtf"/>
+                <!-- 프레젠테이션 -->
+                <data android:pathPattern=".*\\.pptx"/>
+                <data android:pathPattern=".*\\..*\\.pptx"/>
+                <data android:pathPattern=".*\\..*\\..*\\.pptx"/>
+                <data android:pathPattern=".*\\.ppt"/>
+                <data android:pathPattern=".*\\..*\\.ppt"/>
+                <!-- PDF -->
+                <data android:pathPattern=".*\\.pdf"/>
+                <data android:pathPattern=".*\\..*\\.pdf"/>
+                <data android:pathPattern=".*\\..*\\..*\\.pdf"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

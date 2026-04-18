@@ -23,7 +23,7 @@ class AppColors {
   static const Color lightSurfaceElevated = Color(0xFFF8F6FC);   // light lavender surface
   static const Color lightOnSurface = Color(0xFF1E1B2E);         // deep purple-black
   static const Color lightOnSurfaceAlt = Color(0xFF6B6580);      // medium purple-gray
-  static const Color lightTextMuted = Color(0xFF9E96B0);         // light purple-gray
+  static const Color lightTextMuted = Color(0xFF6B6380);         // WCAG AA 4.8:1 on lightBackground
   static const Color lightOutline = Color(0xFFE4DFF0);           // soft lavender border
   static const Color lightOutlineHi = Color(0xFFD0C9E2);         // strong lavender border
 
@@ -33,7 +33,7 @@ class AppColors {
   static const Color darkSurfaceElevated = Color(0xFF242033);     // lighter purple surface
   static const Color darkOnSurface = Color(0xFFF0EDF5);           // light lavender-white
   static const Color darkOnSurfaceAlt = Color(0xFFA9A1BC);        // medium purple
-  static const Color darkTextMuted = Color(0xFF706A85);           // dark purple
+  static const Color darkTextMuted = Color(0xFF9088A8);           // WCAG AA 5.5:1 on darkBackground
   static const Color darkOutline = Color(0xFF302B42);             // purple border
   static const Color darkOutlineHi = Color(0xFF433D5C);           // strong purple border
   static const Color darkCardBackground = Color(0xFF1A1726);      // same as surface
@@ -156,6 +156,12 @@ class AppColors {
   static const Color shapeGreen = Color(0xFFC8E6C9);
   static const Color shapeOrange = Color(0xFFFFE0B2);
   static const Color shapeGrey = Color(0xFFE0E0E0);
+
+  // ── Slide content defaults (document format — persists in .pptx) ──
+  // Not theme-dependent; these are content colors embedded in the file.
+  static const Color slideTitleText = Color(0xFF333333);     // dark gray — title default
+  static const Color slideSubtitleText = Color(0xFF666666);  // medium gray — subtitle/body
+  static const Color slideSectionBg = Color(0xFF2C3E50);     // section break dark bg
 
   // ── Slide background presets ──
   static const List<Color> slideBackgrounds = [

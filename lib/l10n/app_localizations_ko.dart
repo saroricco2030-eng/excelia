@@ -1853,4 +1853,63 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsLicensesSubtitle => '서드파티 라이브러리';
+
+  @override
+  String get commonRestore => '되돌리기';
+
+  @override
+  String get commonTryAgain => '다시 시도';
+
+  @override
+  String get commonDismiss => '닫기';
+
+  @override
+  String fileDeletedWithUndo(String name) {
+    return '\'$name\' 삭제됨';
+  }
+
+  @override
+  String fileDeletedRestored(String name) {
+    return '\'$name\' 복원됨';
+  }
+
+  @override
+  String get saveCelebration => '깔끔하게 저장됐어요';
+
+  @override
+  String get saveCelebrationFirst => '첫 저장 완료 · Excelia에서 여정이 시작됐어요';
+
+  @override
+  String get emptyStateOpenFile => '파일 열기';
+
+  @override
+  String get emptyStateTrySample => '샘플 열어보기';
+
+  @override
+  String get sampleBudgetName => '가계부 샘플';
+
+  @override
+  String get sampleMeetingName => '회의노트 샘플';
+
+  @override
+  String get sampleTodoName => '오늘 할 일';
+
+  @override
+  String get sampleCreated => '샘플 파일을 만들었어요. 바로 탭해보세요.';
+
+  @override
+  String get savedJustNow => '방금 저장됨';
+
+  @override
+  String savedSecondsAgo(int seconds) {
+    return '$seconds초 전 저장됨';
+  }
+
+  @override
+  String a11ySheetTab(String name, int index) {
+    return '$name 시트, $index번째';
+  }
+
+  @override
+  String get a11yAddSheet => '시트 추가';
 }
